@@ -1,4 +1,5 @@
 import { Business } from '@/domain/entities/Business';
+import { NotFoundError, ValidationError } from '@/domain/errors/AppError';
 import { IBusinessAccountRepository } from '@/domain/repositories/IBusinessAccountRepository';
 import { ApiClient } from '../api/ApiClient';
 
@@ -9,31 +10,57 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     try {
       return await this.apiClient.get<Business>(`/businesses/${id}`);
     } catch (error) {
-      return null;
+      if (error instanceof NotFoundError) {
+        return null;
+      }
+      throw error;
     }
   }
 
   async findByEmail(email: string): Promise<Business | null> {
+    if (!email) {
+      throw new ValidationError('Email is required');
+    }
+
     try {
       return await this.apiClient.get<Business>(`/businesses/email/${email}`);
     } catch (error) {
-      return null;
+      if (error instanceof NotFoundError) {
+        return null;
+      }
+      throw error;
     }
   }
 
   async create(business: Omit<Business, 'id'>): Promise<Business> {
+    if (!business.business_name || !business.email) {
+      throw new ValidationError('Business name and email are required');
+    }
+
     return await this.apiClient.post<Business>('/businesses', business);
   }
 
   async update(id: string, businessData: Partial<Business>): Promise<Business> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
+
     return await this.apiClient.put<Business>(`/businesses/${id}`, businessData);
   }
 
   async delete(id: string): Promise<void> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
+
     await this.apiClient.delete(`/businesses/${id}`);
   }
 
   async verifyBusinessAccount(id: string): Promise<Business> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
+
     return await this.apiClient.post<Business>(`/businesses/${id}/verify`, {});
   }
 
@@ -41,6 +68,13 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     id: string,
     data: Pick<Business, 'email' | 'phone_number'>
   ): Promise<Business> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
+    if (!data.email && !data.phone_number) {
+      throw new ValidationError('Either email or phone number must be provided');
+    }
+
     return await this.apiClient.patch<Business>(
       `/businesses/${id}/contact`,
       data
@@ -56,6 +90,12 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
       location: Business['location'];
     }
   ): Promise<Business> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
+    if (!data.business_name) {
+      throw new ValidationError('Business name is required');
+    }
     return await this.apiClient.patch<Business>(
       `/businesses/${id}/profile`,
       data
@@ -66,6 +106,9 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     activeDeliveries: number;
     monthlyDeliveries: number;
   }> {
+    if (!id) {
+      throw new ValidationError('Business ID is required');
+    }
     return await this.apiClient.get<{
       activeDeliveries: number;
       monthlyDeliveries: number;
