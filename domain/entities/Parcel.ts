@@ -1,7 +1,6 @@
-export interface Product {
+export interface Parcel {
   id: string;
-  name: string;
-  sku: string;
+  size: "small" | "medium" | "large";
   weight: number;
   dimensions: {
     length: number;
@@ -9,6 +8,7 @@ export interface Product {
     height: number;
   };
   price: number;
+  fragile: boolean;
   createdAt: Date;
   updatedAt: Date;
 } 
