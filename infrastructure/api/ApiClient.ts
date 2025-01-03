@@ -1,3 +1,5 @@
+import { AppError, AuthenticationError, AuthorizationError, NotFoundError } from '@/domain/errors/AppError';
+
 export class ApiClient {
   private baseUrl: string;
 
@@ -5,23 +7,71 @@ export class ApiClient {
     this.baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
   }
 
+  private handleError(error: any): never {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error instanceof Response) {
+      switch (error.status) {
+        case 401:
+          throw new AuthenticationError();
+        case 403:
+          throw new AuthorizationError();
+        case 404:
+          throw new NotFoundError('Resource');
+        default:
+          throw new AppError(
+            'An unexpected error occurred',
+            'UNEXPECTED_ERROR',
+            500
+          );
+      }
+    }
+
+    throw new AppError(
+      'An unexpected error occurred',
+      'UNEXPECTED_ERROR',
+      500
+    );
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        switch (response.status) {
+          case 401:
+            throw new AuthenticationError();
+          case 403:
+            throw new AuthorizationError();
+          case 404:
+            throw new NotFoundError(errorData.resource || 'Resource');
+          default:
+            throw new AppError(
+              errorData.message || 'An unexpected error occurred',
+              errorData.code || 'UNEXPECTED_ERROR',
+              response.status
+            );
+        }
+      }
+
+      return response.json();
+    } catch (error) {
+      throw this.handleError(error);
     }
-
-    return response.json();
   }
 
   async get<T>(endpoint: string): Promise<T> {
