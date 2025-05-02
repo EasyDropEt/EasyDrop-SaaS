@@ -1,0 +1,10 @@
+import { Business } from '@/domain/entities/Business';
+import { IBusinessAccountRepository } from '@/domain/repositories/IBusinessAccountRepository';
+
+export class VerifyBusinessOtpUseCase {
+  constructor(private businessAccountRepository: IBusinessAccountRepository) {}
+
+  async execute(email: string, otp: string): Promise<{ token: string; business: Business }> {
+    return this.businessAccountRepository.verifyOtp(email, otp);
+  }
+} 
