@@ -16,6 +16,8 @@ const initialFormState: Omit<BusinessRegistration, 'location'> & {
   city: string;
   postal_code: string;
   country: string;
+  password: string;
+  password_confirmation: string;
 } = {
   business_name: '',
   owner_first_name: '',
@@ -26,6 +28,8 @@ const initialFormState: Omit<BusinessRegistration, 'location'> & {
   city: '',
   postal_code: '',
   country: '',
+  password: '',
+  password_confirmation: '',
 };
 
 interface RegisterBusinessPayload {
@@ -60,7 +64,8 @@ export const RegisterForm: React.FC = () => {
     // Required field validation
     const requiredFields = [
       'business_name', 'owner_first_name', 'owner_last_name', 
-      'email', 'phone_number', 'address', 'city', 'postal_code', 'country'
+      'email', 'phone_number', 'address', 'city', 'postal_code', 'country',
+      'password', 'password_confirmation'
     ];
     
     requiredFields.forEach((field) => {
@@ -78,6 +83,16 @@ export const RegisterForm: React.FC = () => {
     // Phone validation (simple check)
     if (formData.phone_number && !/^\+?[0-9() -]{8,}$/.test(formData.phone_number)) {
       newErrors.phone_number = 'Please enter a valid phone number';
+    }
+    
+    // Password validation
+    if (formData.password && formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+    
+    // Password confirmation validation
+    if (formData.password !== formData.password_confirmation) {
+      newErrors.password_confirmation = 'Passwords do not match';
     }
     
     setErrors(newErrors);
@@ -125,7 +140,7 @@ export const RegisterForm: React.FC = () => {
           longitude: 0
         },
         billing_details: [{}],
-        password: "password@Pass123"
+        password: formData.password
       };
       
       const apiClient = new ApiClient();
@@ -136,7 +151,7 @@ export const RegisterForm: React.FC = () => {
       
       // Account created, now request an OTP to login
       const getOtpUseCase = new GetBusinessOtpUseCase(businessRepo);
-      const otpResult = await getOtpUseCase.execute(formData.phone_number, "password@Pass123");
+      const otpResult = await getOtpUseCase.execute(formData.phone_number, formData.password);
       
       setSuccessMessage(`Business account created successfully! Please check your phone for verification code to login. Your user ID is: ${otpResult.user_id}`);
       
@@ -350,6 +365,44 @@ export const RegisterForm: React.FC = () => {
           />
           {errors.country && (
             <p className="mt-1 text-sm text-red-600">{errors.country}</p>
+          )}
+        </div>
+        
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            className={`mt-1 block w-full px-3 py-2 border ${
+              errors.password ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+          />
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+          )}
+        </div>
+        
+        <div>
+          <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
+            Confirm Password
+          </label>
+          <input
+            id="password_confirmation"
+            name="password_confirmation"
+            type="password"
+            value={formData.password_confirmation}
+            onChange={handleChange}
+            className={`mt-1 block w-full px-3 py-2 border ${
+              errors.password_confirmation ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+          />
+          {errors.password_confirmation && (
+            <p className="mt-1 text-sm text-red-600">{errors.password_confirmation}</p>
           )}
         </div>
         
