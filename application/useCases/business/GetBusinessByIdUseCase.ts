@@ -4,7 +4,7 @@ import { IBusinessAccountRepository } from '@/domain/repositories/IBusinessAccou
 export class GetBusinessByIdUseCase {
   constructor(private businessAccountRepository: IBusinessAccountRepository) {}
 
-  async execute(businessId: string): Promise<Business> {
-    return this.businessAccountRepository.getBusinessById(businessId);
+  async execute(): Promise<Business> {
+    return this.businessAccountRepository.getBusinessById();
   }
 } 

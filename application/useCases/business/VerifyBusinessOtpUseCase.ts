@@ -4,7 +4,7 @@ import { IBusinessAccountRepository } from '@/domain/repositories/IBusinessAccou
 export class VerifyBusinessOtpUseCase {
   constructor(private businessAccountRepository: IBusinessAccountRepository) {}
 
-  async execute(email: string, otp: string): Promise<{ token: string; business: Business }> {
-    return this.businessAccountRepository.verifyOtp(email, otp);
+  async execute(userId: string, otp: string): Promise<{ token: string; business: Business }> {
+    return this.businessAccountRepository.verifyOtp(userId, otp);
   }
 } 

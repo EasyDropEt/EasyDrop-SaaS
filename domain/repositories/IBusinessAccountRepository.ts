@@ -8,9 +8,9 @@ export interface IBusinessAccountRepository {
   login(email: string, password: string): Promise<{ token: string; business: Business }>;
   
   // New OTP-based authentication
-  getOtp(email: string): Promise<{ message: string }>;
-  verifyOtp(email: string, otp: string): Promise<{ token: string; business: Business }>;
+  getOtp(phoneNumber: string, password: string): Promise<{ message: string; user_id: string }>;
+  verifyOtp(userId: string, otp: string): Promise<{ token: string; business: Business }>;
   
   // Get business details
-  getBusinessById(businessId: string): Promise<Business>;
+  getBusinessById(): Promise<Business>;
 }

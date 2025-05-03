@@ -16,7 +16,7 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
       message: string;
       data: Business;
       errors: any[];
-    }>('/business', business);
+    }>('/business/register', business);
     
     if (!response.is_success) {
       throw new ValidationError(response.message || 'Failed to create business account');
@@ -48,17 +48,17 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     return response.data;
   }
 
-  async getOtp(email: string): Promise<{ message: string }> {
-    if (!email) {
-      throw new ValidationError('Email is required');
+  async getOtp(phoneNumber: string, password: string): Promise<{ message: string; user_id: string }> {
+    if (!phoneNumber || !password) {
+      throw new ValidationError('Phone number and password are required');
     }
 
     const response = await this.apiClient.post<{
       is_success: boolean;
       message: string;
-      data: { message: string };
+      data: { message: string; user_id: string };
       errors: any[];
-    }>('/business/login/get-otp', { email });
+    }>('/business/login/get-otp', { phone_number: phoneNumber, password });
     
     if (!response.is_success) {
       throw new ValidationError(response.message || 'Failed to send OTP');
@@ -67,9 +67,9 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     return response.data;
   }
 
-  async verifyOtp(email: string, otp: string): Promise<{ token: string; business: Business }> {
-    if (!email || !otp) {
-      throw new ValidationError('Email and OTP are required');
+  async verifyOtp(userId: string, otp: string): Promise<{ token: string; business: Business }> {
+    if (!userId || !otp) {
+      throw new ValidationError('User ID and OTP are required');
     }
 
     const response = await this.apiClient.post<{
@@ -77,7 +77,7 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
       message: string;
       data: { token: string; business: Business };
       errors: any[];
-    }>('/business/login/verify', { email, otp });
+    }>('/business/login/verify', { user_id: userId, otp });
     
     if (!response.is_success) {
       throw new ValidationError(response.message || 'Invalid OTP');
@@ -86,17 +86,13 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
     return response.data;
   }
 
-  async getBusinessById(businessId: string): Promise<Business> {
-    if (!businessId) {
-      throw new ValidationError('Business ID is required');
-    }
-
+  async getBusinessById(): Promise<Business> {
     const response = await this.apiClient.get<{
       is_success: boolean;
       message: string;
       data: Business;
       errors: any[];
-    }>(`/business/${businessId}`);
+    }>('/business/me');
     
     if (!response.is_success) {
       throw new NotFoundError('Business');

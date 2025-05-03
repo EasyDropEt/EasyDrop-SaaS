@@ -3,7 +3,7 @@ import { IBusinessAccountRepository } from '@/domain/repositories/IBusinessAccou
 export class GetBusinessOtpUseCase {
   constructor(private businessAccountRepository: IBusinessAccountRepository) {}
 
-  async execute(email: string): Promise<{ message: string }> {
-    return this.businessAccountRepository.getOtp(email);
+  async execute(phoneNumber: string, password: string): Promise<{ message: string; user_id: string }> {
+    return this.businessAccountRepository.getOtp(phoneNumber, password);
   }
 } 
