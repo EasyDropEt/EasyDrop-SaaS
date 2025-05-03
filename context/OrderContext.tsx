@@ -7,9 +7,10 @@ interface OrderContextType {
   currentOrder: Order | null;
   loading: boolean;
   error: string | null;
-  fetchOrders: (businessId: string) => Promise<void>;
+  fetchOrders: () => Promise<Order[]>;
   fetchOrderById: (orderId: string) => Promise<Order | null>;
   createOrder: (orderData: Omit<Order, 'id'>) => Promise<Order | null>;
+  createBatchOrders: (ordersData: Omit<Order, 'id'>[]) => Promise<Order[] | null>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
