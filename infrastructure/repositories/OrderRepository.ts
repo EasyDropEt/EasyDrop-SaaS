@@ -12,7 +12,7 @@ export class OrderRepository implements IOrderRepository {
         message: string;
         data: Order;
         errors: any[];
-      }>(`/business/orders/order/${id}`);
+      }>(`/business/me/orders/${id}`);
       
       return response.is_success ? response.data : null;
     } catch (error) {
@@ -20,24 +20,34 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
-  async findAll(businessId: string): Promise<Order[]> {
+  async findAll(): Promise<Order[]> {
     const response = await this.apiClient.get<{
       is_success: boolean;
       message: string;
       data: Order[];
       errors: any[];
-    }>(`/business/orders/${businessId}`);
+    }>('/business/me/orders');
     
     return response.is_success ? response.data : [];
   }
 
   async create(order: Omit<Order, 'id'>): Promise<Order> {
+    // For single order creation, we'll use the batch endpoint with a single order
+    const response = await this.createBatch([order]);
+    return response[0]; // Return the first (and only) order
+  }
+
+  async createBatch(orders: Omit<Order, 'id'>[]): Promise<Order[]> {
     const response = await this.apiClient.post<{
       is_success: boolean;
       message: string;
-      data: Order;
+      data: Order[];
       errors: any[];
-    }>('/business/orders', order);
+    }>('/business/me/orders', { orders });
+    
+    if (!response.is_success) {
+      throw new Error(response.message || 'Failed to create orders');
+    }
     
     return response.data;
   }
