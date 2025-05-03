@@ -3,6 +3,7 @@ import { Order } from '@/domain/entities/Order';
 import { GetBusinessOrdersUseCase } from '@/application/useCases/order/GetOrdersUseCase';
 import { GetBusinessOrderByIdUseCase } from '@/application/useCases/order/GetOrderByIdUseCase';
 import { CreateBusinessOrderUseCase } from '@/application/useCases/order/CreateOrderUseCase';
+import { CreateBatchOrdersUseCase } from '@/application/useCases/order/CreateBatchOrdersUseCase';
 import { OrderRepository } from '@/infrastructure/repositories/OrderRepository';
 import { ApiClient } from '@/infrastructure/api/ApiClient';
 
@@ -18,16 +19,19 @@ export const useOrders = () => {
   const getOrdersUseCase = new GetBusinessOrdersUseCase(orderRepository);
   const getOrderByIdUseCase = new GetBusinessOrderByIdUseCase(orderRepository);
   const createOrderUseCase = new CreateBusinessOrderUseCase(orderRepository);
+  const createBatchOrdersUseCase = new CreateBatchOrdersUseCase(orderRepository);
 
-  const fetchOrders = useCallback(async (businessId: string) => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedOrders = await getOrdersUseCase.execute(businessId);
+      const fetchedOrders = await getOrdersUseCase.execute();
       setOrders(fetchedOrders);
+      return fetchedOrders;
     } catch (err) {
       setError('Failed to fetch orders');
       console.error(err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -65,6 +69,22 @@ export const useOrders = () => {
     }
   }, []);
 
+  const createBatchOrders = useCallback(async (ordersData: Omit<Order, 'id'>[]) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newOrders = await createBatchOrdersUseCase.execute(ordersData);
+      setOrders(prev => [...prev, ...newOrders]);
+      return newOrders;
+    } catch (err) {
+      setError('Failed to create orders');
+      console.error(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     orders,
     currentOrder,
@@ -72,6 +92,7 @@ export const useOrders = () => {
     error,
     fetchOrders,
     fetchOrderById,
-    createOrder
+    createOrder,
+    createBatchOrders
   };
 }; 
