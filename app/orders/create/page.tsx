@@ -1,0 +1,461 @@
+'use client';
+
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useBusinessContext } from '@/context/BusinessContext';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ApiClient } from '@/infrastructure/api/ApiClient';
+import { ValidationError } from '@/domain/errors/AppError';
+
+interface OrderFormData {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  delivery_address: string;
+  delivery_city: string;
+  delivery_postal_code: string;
+  delivery_country: string;
+  parcel_size: 'small' | 'medium' | 'large';
+  parcel_weight: string;
+  is_fragile: boolean;
+  delivery_notes: string;
+}
+
+interface CreateOrderPayload {
+  recipient: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  delivery_location: {
+    address: string;
+    postal_code: string;
+    city: string;
+    country: string;
+  };
+  parcel: {
+    size: string;
+    weight: number;
+    fragile: boolean;
+    dimensions: {
+      length: number;
+      width: number;
+      height: number;
+    };
+  };
+  notes: string;
+  latest_time_of_delivery: string; // ISO date-time string
+}
+
+export default function CreateOrderPage() {
+  const { business } = useBusinessContext();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [generalError, setGeneralError] = useState('');
+  
+  const [formData, setFormData] = useState<OrderFormData>({
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    delivery_address: '',
+    delivery_city: '',
+    delivery_postal_code: '',
+    delivery_country: '',
+    parcel_size: 'small',
+    parcel_weight: '',
+    is_fragile: false,
+    delivery_notes: ''
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    
+    setFormData((prev) => ({
+      ...prev,
+      [name]: newValue
+    }));
+    
+    // Clear error for this field when user types
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+  
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    const requiredFields = [
+      'customer_name',
+      'customer_email',
+      'customer_phone',
+      'delivery_address',
+      'delivery_city',
+      'delivery_postal_code',
+      'delivery_country',
+      'parcel_weight'
+    ];
+    
+    requiredFields.forEach((field) => {
+      const value = formData[field as keyof typeof formData];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    // Email validation
+    if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
+      newErrors.customer_email = 'Please enter a valid email address';
+    }
+    
+    // Phone validation (simple check)
+    if (formData.customer_phone && !/^\+?[0-9() -]{8,}$/.test(formData.customer_phone)) {
+      newErrors.customer_phone = 'Please enter a valid phone number';
+    }
+    
+    // Weight validation (must be a number)
+    if (formData.parcel_weight) {
+      const weight = parseFloat(formData.parcel_weight);
+      if (isNaN(weight) || weight <= 0) {
+        newErrors.parcel_weight = 'Please enter a valid weight';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    if (!business?.id) {
+      setGeneralError('Your business account information is not available. Please log in again.');
+      return;
+    }
+    
+    setIsLoading(true);
+    setGeneralError('');
+    
+    try {
+      // Create the order payload
+      const orderData: CreateOrderPayload = {
+        recipient: {
+          name: formData.customer_name,
+          email: formData.customer_email,
+          phone: formData.customer_phone
+        },
+        delivery_location: {
+          address: formData.delivery_address,
+          postal_code: formData.delivery_postal_code,
+          city: formData.delivery_city,
+          country: formData.delivery_country
+        },
+        parcel: {
+          size: formData.parcel_size,
+          weight: parseFloat(formData.parcel_weight),
+          fragile: formData.is_fragile,
+          dimensions: {
+            length: 10, // Default values as we don't have fields for these
+            width: 10,
+            height: 10
+          }
+        },
+        notes: formData.delivery_notes,
+        latest_time_of_delivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+      };
+      
+      const apiClient = new ApiClient();
+      const response = await apiClient.post<{
+        is_success: boolean;
+        message: string;
+        data: any;
+        errors: any[];
+      }>(`/business/${business.id}/orders`, { orders: [orderData] });
+      
+      if (!response.is_success) {
+        throw new Error(response.message || 'Failed to create order');
+      }
+      
+      router.push('/orders');
+    } catch (error) {
+      console.error('Order creation error:', error);
+      if (error instanceof ValidationError) {
+        setGeneralError(error.message);
+      } else if (error instanceof Error) {
+        setGeneralError(error.message);
+      } else {
+        setGeneralError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <ProtectedRoute>
+      <div className="container mx-auto py-12 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Create New Order</h1>
+          <p className="text-gray-600 mt-2">
+            Fill in the details below to create a new delivery order
+          </p>
+        </div>
+        
+        {generalError && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
+            {generalError}
+          </div>
+        )}
+        
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6">
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Customer Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="customer_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="customer_name"
+                    name="customer_name"
+                    value={formData.customer_name}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${
+                      errors.customer_name ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  {errors.customer_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.customer_name}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label htmlFor="customer_email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer Email *
+                  </label>
+                  <input
+                    type="email"
+                    id="customer_email"
+                    name="customer_email"
+                    value={formData.customer_email}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${
+                      errors.customer_email ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  {errors.customer_email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.customer_email}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label htmlFor="customer_phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    id="customer_phone"
+                    name="customer_phone"
+                    value={formData.customer_phone}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${
+                      errors.customer_phone ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  {errors.customer_phone && (
+                    <p className="mt-1 text-sm text-red-600">{errors.customer_phone}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Delivery Information</h2>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label htmlFor="delivery_address" className="block text-sm font-medium text-gray-700 mb-1">
+                    Delivery Address *
+                  </label>
+                  <input
+                    type="text"
+                    id="delivery_address"
+                    name="delivery_address"
+                    value={formData.delivery_address}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${
+                      errors.delivery_address ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  {errors.delivery_address && (
+                    <p className="mt-1 text-sm text-red-600">{errors.delivery_address}</p>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label htmlFor="delivery_city" className="block text-sm font-medium text-gray-700 mb-1">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery_city"
+                      name="delivery_city"
+                      value={formData.delivery_city}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border ${
+                        errors.delivery_city ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    />
+                    {errors.delivery_city && (
+                      <p className="mt-1 text-sm text-red-600">{errors.delivery_city}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="delivery_postal_code" className="block text-sm font-medium text-gray-700 mb-1">
+                      Postal Code *
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery_postal_code"
+                      name="delivery_postal_code"
+                      value={formData.delivery_postal_code}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border ${
+                        errors.delivery_postal_code ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    />
+                    {errors.delivery_postal_code && (
+                      <p className="mt-1 text-sm text-red-600">{errors.delivery_postal_code}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="delivery_country" className="block text-sm font-medium text-gray-700 mb-1">
+                      Country *
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery_country"
+                      name="delivery_country"
+                      value={formData.delivery_country}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border ${
+                        errors.delivery_country ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    />
+                    {errors.delivery_country && (
+                      <p className="mt-1 text-sm text-red-600">{errors.delivery_country}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Parcel Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="parcel_size" className="block text-sm font-medium text-gray-700 mb-1">
+                    Parcel Size *
+                  </label>
+                  <select
+                    id="parcel_size"
+                    name="parcel_size"
+                    value={formData.parcel_size}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="parcel_weight" className="block text-sm font-medium text-gray-700 mb-1">
+                    Weight (kg) *
+                  </label>
+                  <input
+                    type="text"
+                    id="parcel_weight"
+                    name="parcel_weight"
+                    value={formData.parcel_weight}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${
+                      errors.parcel_weight ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  {errors.parcel_weight && (
+                    <p className="mt-1 text-sm text-red-600">{errors.parcel_weight}</p>
+                  )}
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_fragile"
+                    name="is_fragile"
+                    checked={formData.is_fragile}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="is_fragile" className="ml-2 block text-sm text-gray-700">
+                    Fragile Item
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <label htmlFor="delivery_notes" className="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Notes
+              </label>
+              <textarea
+                id="delivery_notes"
+                name="delivery_notes"
+                rows={3}
+                value={formData.delivery_notes}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Special instructions for the delivery"
+              ></textarea>
+            </div>
+            
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+              >
+                {isLoading ? 'Creating...' : 'Create Order'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+} 
+ 
