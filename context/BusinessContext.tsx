@@ -1,23 +1,46 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Business } from '@/domain/entities/Business';
+import { BusinessDto } from '@/domain/entities/Business';
+import { GetMyBusinessUseCase } from '@/application/useCases/business/GetMyBusinessUseCase';
+import { BusinessAccountRepository } from '@/infrastructure/repositories/BusinessAccountRepository';
+import { ApiClient } from '@/infrastructure/api/ApiClient';
 
 interface BusinessContextType {
-  business: Business | null;
+  business: BusinessDto | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, business: Business) => void;
+  login: (token: string, business: BusinessDto) => void;
   logout: () => void;
+  refreshBusinessData: () => Promise<void>;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [business, setBusiness] = useState<Business | null>(null);
+  const [business, setBusiness] = useState<BusinessDto | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const refreshBusinessData = async () => {
+    if (!token) return;
+
+    try {
+      const apiClient = new ApiClient();
+      apiClient.setAuthToken(token);
+      const businessRepo = new BusinessAccountRepository(apiClient);
+      const getMyBusinessUseCase = new GetMyBusinessUseCase(businessRepo);
+      
+      const businessData = await getMyBusinessUseCase.execute();
+      setBusiness(businessData);
+      localStorage.setItem('business_data', JSON.stringify(businessData));
+    } catch (error) {
+      console.error('Failed to refresh business data:', error);
+      // If we can't get the business data, we should log out
+      logout();
+    }
+  };
 
   useEffect(() => {
     // Load from localStorage on initial render
@@ -28,6 +51,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         setToken(savedToken);
         setBusiness(JSON.parse(savedBusiness));
+        // Refresh business data in the background
+        refreshBusinessData();
       } catch (error) {
         console.error('Failed to parse saved business data:', error);
         localStorage.removeItem('business_token');
@@ -38,7 +63,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsLoading(false);
   }, []);
 
-  const login = (newToken: string, businessData: Business) => {
+  const login = (newToken: string, businessData: BusinessDto) => {
     setToken(newToken);
     setBusiness(businessData);
     localStorage.setItem('business_token', newToken);
@@ -60,7 +85,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isAuthenticated: !!token,
         isLoading,
         login,
-        logout
+        logout,
+        refreshBusinessData
       }}
     >
       {children}
@@ -68,9 +94,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-export const useBusinessContext = () => {
+export const useBusinessContext = (): BusinessContextType => {
   const context = useContext(BusinessContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useBusinessContext must be used within a BusinessProvider');
   }
   return context;
