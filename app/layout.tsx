@@ -32,7 +32,7 @@ export default function RootLayout({
         <BusinessProvider>
           <div className="flex flex-col min-h-screen">
             <Navigation />
-            <main className="flex-grow">
+            <main className="flex-grow text-black">
               {children}
             </main>
             <footer className="bg-white border-t py-4">
