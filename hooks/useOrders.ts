@@ -13,18 +13,25 @@ export const useOrders = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize repository and use cases
-  const apiClient = new ApiClient();
-  const orderRepository = new OrderRepository(apiClient);
-  const getOrdersUseCase = new GetBusinessOrdersUseCase(orderRepository);
-  const getOrderByIdUseCase = new GetBusinessOrderByIdUseCase(orderRepository);
-  const createOrderUseCase = new CreateBusinessOrderUseCase(orderRepository);
-  const createBatchOrdersUseCase = new CreateBatchOrdersUseCase(orderRepository);
+  // Helper function to create an authenticated ApiClient
+  const getAuthenticatedApiClient = (): ApiClient => {
+    const apiClient = new ApiClient();
+    const token = localStorage.getItem('business_token');
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in again.');
+    }
+    apiClient.setAuthToken(token);
+    return apiClient;
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const apiClient = getAuthenticatedApiClient();
+      const orderRepository = new OrderRepository(apiClient);
+      const getOrdersUseCase = new GetBusinessOrdersUseCase(orderRepository);
+      
       const fetchedOrders = await getOrdersUseCase.execute();
       setOrders(fetchedOrders);
       return fetchedOrders;
@@ -41,6 +48,10 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
+      const apiClient = getAuthenticatedApiClient();
+      const orderRepository = new OrderRepository(apiClient);
+      const getOrderByIdUseCase = new GetBusinessOrderByIdUseCase(orderRepository);
+      
       const order = await getOrderByIdUseCase.execute(orderId);
       setCurrentOrder(order);
       return order;
@@ -57,6 +68,10 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
+      const apiClient = getAuthenticatedApiClient();
+      const orderRepository = new OrderRepository(apiClient);
+      const createOrderUseCase = new CreateBusinessOrderUseCase(orderRepository);
+      
       const newOrder = await createOrderUseCase.execute(orderData);
       setOrders(prev => [...prev, newOrder]);
       return newOrder;
@@ -73,6 +88,10 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
+      const apiClient = getAuthenticatedApiClient();
+      const orderRepository = new OrderRepository(apiClient);
+      const createBatchOrdersUseCase = new CreateBatchOrdersUseCase(orderRepository);
+      
       const newOrders = await createBatchOrdersUseCase.execute(ordersData);
       setOrders(prev => [...prev, ...newOrders]);
       return newOrders;
