@@ -54,10 +54,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
         <div>
           <h3 className="text-lg font-semibold mb-3">Consumer Information</h3>
           <div className="space-y-2">
-            <p><span className="font-medium">Name:</span> {currentOrder.consumer.name}</p>
-            <p><span className="font-medium">Email:</span> {currentOrder.consumer.email}</p>
-            <p><span className="font-medium">Phone:</span> {currentOrder.consumer.phone_number}</p>
-            <p><span className="font-medium">Status:</span> {currentOrder.consumer.active_status ? 'Active' : 'Inactive'}</p>
+            <p><span className="font-medium">Name:</span> {currentOrder.consumer?.name || 'N/A'}</p>
+            <p><span className="font-medium">Email:</span> {currentOrder.consumer?.email || 'N/A'}</p>
+            <p><span className="font-medium">Phone:</span> {currentOrder.consumer?.phone_number || 'N/A'}</p>
+            <p><span className="font-medium">Status:</span> {currentOrder.consumer?.active_status ? 'Active' : 'Inactive'}</p>
           </div>
         </div>
       </div>
@@ -65,11 +65,15 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-3">Parcel Information</h3>
         <div className="space-y-2">
-          <p><span className="font-medium">Size:</span> {currentOrder.parcel.size}</p>
-          <p><span className="font-medium">Weight:</span> {currentOrder.parcel.weight} kg</p>
-          <p><span className="font-medium">Dimensions:</span> {currentOrder.parcel.dimensions.width} x {currentOrder.parcel.dimensions.height} x {currentOrder.parcel.dimensions.length} cm</p>
-          <p><span className="font-medium">Fragile:</span> {currentOrder.parcel.fragile ? 'Yes' : 'No'}</p>
-          <p><span className="font-medium">Price:</span> ${currentOrder.parcel.price.toFixed(2)}</p>
+          <p><span className="font-medium">Size:</span> {currentOrder.parcel?.size || 'N/A'}</p>
+          <p><span className="font-medium">Weight:</span> {currentOrder.parcel?.weight ? `${currentOrder.parcel.weight} kg` : 'N/A'}</p>
+          <p><span className="font-medium">Dimensions:</span> {
+            currentOrder.parcel?.dimensions ? 
+            `${currentOrder.parcel.dimensions.width || 0} x ${currentOrder.parcel.dimensions.height || 0} x ${currentOrder.parcel.dimensions.length || 0} cm` : 
+            'N/A'
+          }</p>
+          <p><span className="font-medium">Fragile:</span> {currentOrder.parcel?.fragile ? 'Yes' : 'No'}</p>
+          <p><span className="font-medium">Price:</span> ${currentOrder.parcel?.price ? currentOrder.parcel.price.toFixed(2) : '0.00'}</p>
         </div>
       </div>
     </div>
