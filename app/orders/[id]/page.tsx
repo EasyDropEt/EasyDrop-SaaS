@@ -1,18 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import { OrderProvider } from '@/context/OrderContext';
 import { OrderDetails } from '@/components/orders/OrderDetails';
 import Link from 'next/link';
 
 interface OrderDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
-  const { id } = params;
+  const { id } = use(params);
 
   return (
     <OrderProvider>
