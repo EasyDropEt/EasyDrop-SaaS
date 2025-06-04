@@ -1,26 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { ValidationError } from '@/domain/errors/AppError';
 import { GetBusinessOtpUseCase } from '@/application/useCases/business/GetBusinessOtpUseCase';
 import { VerifyBusinessOtpUseCase } from '@/application/useCases/business/VerifyBusinessOtpUseCase';
 import { BusinessAccountRepository } from '@/infrastructure/repositories/BusinessAccountRepository';
 import { ApiClient } from '@/infrastructure/api/ApiClient';
+import { storage } from '@/utils/storage';
 import Link from 'next/link';
 
 export const LoginForm: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [userId, setUserId] = useState('');
-  const [step, setStep] = useState(1); // 1 = Phone/Password entry, 2 = OTP verification
+  const [step, setStep] = useState(1);
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useBusinessContext();
+
+  // Check for existing OTP user ID on component mount
+  useEffect(() => {
+    const savedUserId = storage.getOtpUserId();
+    if (savedUserId) {
+      setStep(2);
+    }
+  }, []);
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +54,9 @@ export const LoginForm: React.FC = () => {
       
       const result = await getOtpUseCase.execute(phoneNumber, password);
       
-      setUserId(result.user_id);
+      console.log('result', result);
+      // Save user ID to localStorage
+      storage.saveOtpUserId(result.id);
       setSuccessMessage(result.message || 'OTP sent successfully! Please check your phone.');
       setStep(2);
     } catch (error) {
@@ -76,10 +87,24 @@ export const LoginForm: React.FC = () => {
       const businessRepo = new BusinessAccountRepository(apiClient);
       const verifyOtpUseCase = new VerifyBusinessOtpUseCase(businessRepo);
       
+      const userId = storage.getOtpUserId();
+      if (userId === null) {
+        throw new Error('User ID not found. Please try logging in again.');
+      }
+
+      console.log('userId', userId, userId === undefined);
+      
       const result = await verifyOtpUseCase.execute(userId, otp);
       
+      // Clear the OTP user ID from storage after successful verification
+      storage.removeOtpUserId();
+      
+      // Login with the token and business data
       login(result.token, result.business);
-      router.push('/');
+      
+      // Redirect to the return URL or default to home
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     } catch (error) {
       console.error('OTP verification error:', error);
       if (error instanceof ValidationError) {
@@ -150,15 +175,17 @@ export const LoginForm: React.FC = () => {
                 isLoading ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
-              {isLoading ? 'Sending...' : 'Send OTP'}
+              {isLoading ? 'Sending OTP...' : 'Get OTP'}
             </button>
           </div>
           
-          <div className="text-sm text-center mt-4">
-            Don't have an account?{' '}
-            <Link href="/business/register" className="font-medium text-blue-600 hover:text-blue-500">
-              Register now
-            </Link>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link href="/business/register" className="text-blue-600 hover:text-blue-500">
+                Register here
+              </Link>
+            </p>
           </div>
         </form>
       ) : (
