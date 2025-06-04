@@ -4,82 +4,64 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ApiClient } from '@/infrastructure/api/ApiClient';
-
-interface Order {
-  id: string;
-  consumer_id: string;
-  business_id: string;
-  order_status: string;
-  customer_name?: string;
-  created_at: string;
-  delivery_job_id?: string;
-  delivery_by?: string;
-}
+import { useOrders } from '@/hooks/useOrders';
+import { Order } from '@/domain/entities/Order';
 
 export default function OrdersPage() {
   const { business } = useBusinessContext();
+  const { orders, loading, error, fetchOrders } = useOrders();
   const [selectedTab, setSelectedTab] = useState('all');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     if (business?.id) {
       fetchOrders();
     }
-  }, [business?.id, selectedTab]);
+  }, [business?.id, fetchOrders]);
 
-  const fetchOrders = async () => {
-    if (!business?.id) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const apiClient = new ApiClient();
-      const response = await apiClient.get<{
-        is_success: boolean;
-        message: string;
-        data: Order[];
-        errors: any[];
-      }>(`/business/${business.id}/orders`);
+  useEffect(() => {
+    // Filter orders based on selected tab
+    if (selectedTab === 'all') {
+      setFilteredOrders(orders);
+    } else {
+      const statusMap: Record<string, string> = {
+        'pending': 'PENDING',
+        'in_progress': 'PICKED_UP', 
+        'completed': 'DELIVERED',
+        'cancelled': 'CANCELLED'
+      };
       
-      if (!response.is_success) {
-        throw new Error(response.message || 'Failed to fetch orders');
+      const targetStatus = statusMap[selectedTab];
+      if (targetStatus) {
+        const filtered = orders.filter(order => order.status === targetStatus);
+        setFilteredOrders(filtered);
+      } else {
+        setFilteredOrders(orders);
       }
-      
-      // Filter orders based on selected tab if needed
-      let filteredOrders = response.data || [];
-      if (selectedTab !== 'all') {
-        filteredOrders = filteredOrders.filter(order => 
-          order.order_status.toLowerCase() === selectedTab
-        );
-      }
-      
-      setOrders(filteredOrders);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      setError('Failed to load orders. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [orders, selectedTab]);
 
   const getOrderStatusClass = (status: string): string => {
     switch (status.toLowerCase()) {
-      case 'completed':
+      case 'delivered':
         return 'bg-green-100 text-green-800';
-      case 'in_progress':
+      case 'picked_up':
         return 'bg-blue-100 text-blue-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatDate = (date: Date | string): string => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleDateString();
+    } catch {
+      return 'Invalid Date';
     }
   };
 
@@ -163,7 +145,7 @@ export default function OrdersPage() {
           </div>
           
           <div className="overflow-x-auto">
-            {isLoading ? (
+            {loading ? (
               <div className="py-12 px-6 text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                 <p className="mt-4 text-gray-500">Loading orders...</p>
@@ -184,7 +166,7 @@ export default function OrdersPage() {
                   Try Again
                 </button>
               </div>
-            ) : orders.length === 0 ? (
+            ) : filteredOrders.length === 0 ? (
               <div className="py-12 px-6 text-center">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -227,21 +209,21 @@ export default function OrdersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <tr key={order.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {order.id.substring(0, 8)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.customer_name || 'Customer'}
+                        {order.consumer?.name || 'Customer'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getOrderStatusClass(order.order_status)}`}>
-                          {order.order_status}
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getOrderStatusClass(order.status)}`}>
+                          {order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()}
+                        {formatDate(order.latest_time_of_arrival)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {order.delivery_job_id ? 'Assigned' : 'Unassigned'}
