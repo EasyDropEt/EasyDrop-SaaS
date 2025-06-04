@@ -84,7 +84,7 @@ export const Navigation: React.FC = () => {
                 <div className="relative">
                   <button 
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="flex items-center space-x-2 bg-gray-100 px-4 py-2 rounded hover:bg-gray-200 focus:outline-none"
+                    className="flex text-black items-center space-x-2 bg-gray-100 px-4 py-2 rounded hover:bg-gray-200 focus:outline-none"
                   >
                     <span>{business?.business_name}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
