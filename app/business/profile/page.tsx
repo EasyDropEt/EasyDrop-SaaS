@@ -1,13 +1,45 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
+import { Business } from '@/domain/entities/Business';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Metadata } from 'next';
 import { useRouter } from 'next/navigation';
 
 export default function BusinessProfilePage() {
-  const { business } = useBusinessContext();
+  const { business, refreshBusinessData, isLoading } = useBusinessContext();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const refreshData = async () => {
+      setIsRefreshing(true);
+      try {
+        await refreshBusinessData();
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+
+    refreshData();
+  }, []);
+
+  if (isLoading || isRefreshing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500">No business data available</div>
+      </div>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -18,6 +50,16 @@ export default function BusinessProfilePage() {
           </div>
           
           <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <button
+                onClick={() => refreshBusinessData()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-1">
                 <div className="bg-gray-100 p-6 rounded-lg">
