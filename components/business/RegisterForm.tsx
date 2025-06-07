@@ -10,6 +10,8 @@ import { ApiClient } from '@/infrastructure/api/ApiClient';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { ValidationError } from '@/domain/errors/AppError';
 import { GetBusinessOtpUseCase } from '@/application/useCases/business/GetBusinessOtpUseCase';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 const initialFormState: Omit<BusinessRegistration, 'location'> & { 
   address: string;
@@ -153,7 +155,7 @@ export const RegisterForm: React.FC = () => {
       const getOtpUseCase = new GetBusinessOtpUseCase(businessRepo);
       const otpResult = await getOtpUseCase.execute(formData.phone_number, formData.password);
       
-      setSuccessMessage(`Business account created successfully! Please check your phone for verification code to login. Your user ID is: ${otpResult.user_id}`);
+      setSuccessMessage(`Business account created successfully! Please check your phone for verification code to login. Your user ID is: ${otpResult.id}`);
       
       // Redirect to login page after a short delay
       setTimeout(() => {
@@ -174,27 +176,45 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-white px-6 py-8 rounded-lg shadow-md max-w-md w-full mx-auto">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="card p-8 max-w-md w-full mx-auto"
+    >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Create Business Account</h1>
-        <p className="text-gray-600 mt-2">Start managing your deliveries with EasyDrop</p>
+        <h1 className="text-3xl font-bold text-dark-900 dark:text-white mb-2">Create Business Account</h1>
+        <p className="text-dark-500 dark:text-light-400">Start managing your deliveries with EasyDrop</p>
       </div>
       
       {generalError && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6 text-sm"
+        >
           {generalError}
-        </div>
+        </motion.div>
       )}
       
       {successMessage && (
-        <div className="bg-green-50 text-green-600 p-3 rounded mb-4 text-sm">
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-lg mb-6 text-sm"
+        >
           {successMessage}
-        </div>
+        </motion.div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <motion.form 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        onSubmit={handleSubmit} 
+        className="space-y-6"
+      >
         <div>
-          <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="business_name" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Business Name
           </label>
           <input
@@ -203,18 +223,18 @@ export const RegisterForm: React.FC = () => {
             type="text"
             value={formData.business_name}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.business_name ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.business_name ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
           />
           {errors.business_name && (
-            <p className="mt-1 text-sm text-red-600">{errors.business_name}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.business_name}</p>
           )}
         </div>
         
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <label htmlFor="owner_first_name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="owner_first_name" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               First Name
             </label>
             <input
@@ -223,17 +243,17 @@ export const RegisterForm: React.FC = () => {
               type="text"
               value={formData.owner_first_name}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.owner_first_name ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              className={`input ${
+                errors.owner_first_name ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
             />
             {errors.owner_first_name && (
-              <p className="mt-1 text-sm text-red-600">{errors.owner_first_name}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.owner_first_name}</p>
             )}
           </div>
           
           <div>
-            <label htmlFor="owner_last_name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="owner_last_name" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               Last Name
             </label>
             <input
@@ -242,19 +262,19 @@ export const RegisterForm: React.FC = () => {
               type="text"
               value={formData.owner_last_name}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.owner_last_name ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              className={`input ${
+                errors.owner_last_name ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
             />
             {errors.owner_last_name && (
-              <p className="mt-1 text-sm text-red-600">{errors.owner_last_name}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.owner_last_name}</p>
             )}
           </div>
         </div>
         
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
+          <label htmlFor="email" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
+            Email Address
           </label>
           <input
             id="email"
@@ -262,17 +282,17 @@ export const RegisterForm: React.FC = () => {
             type="email"
             value={formData.email}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.email ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.email ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="phone_number" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Phone Number
           </label>
           <input
@@ -281,17 +301,18 @@ export const RegisterForm: React.FC = () => {
             type="tel"
             value={formData.phone_number}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.phone_number ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.phone_number ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
+            placeholder="+251978512230"
           />
           {errors.phone_number && (
-            <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone_number}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="address" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Address
           </label>
           <input
@@ -300,18 +321,18 @@ export const RegisterForm: React.FC = () => {
             type="text"
             value={formData.address}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.address ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.address ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
           />
           {errors.address && (
-            <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.address}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="city" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               City
             </label>
             <input
@@ -320,17 +341,17 @@ export const RegisterForm: React.FC = () => {
               type="text"
               value={formData.city}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.city ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              className={`input ${
+                errors.city ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
             />
             {errors.city && (
-              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.city}</p>
             )}
           </div>
           
           <div>
-            <label htmlFor="postal_code" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="postal_code" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               Postal Code
             </label>
             <input
@@ -339,37 +360,37 @@ export const RegisterForm: React.FC = () => {
               type="text"
               value={formData.postal_code}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.postal_code ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              className={`input ${
+                errors.postal_code ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
             />
             {errors.postal_code && (
-              <p className="mt-1 text-sm text-red-600">{errors.postal_code}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.postal_code}</p>
+            )}
+          </div>
+          
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
+              Country
+            </label>
+            <input
+              id="country"
+              name="country"
+              type="text"
+              value={formData.country}
+              onChange={handleChange}
+              className={`input ${
+                errors.country ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
+            />
+            {errors.country && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.country}</p>
             )}
           </div>
         </div>
         
         <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-            Country
-          </label>
-          <input
-            id="country"
-            name="country"
-            type="text"
-            value={formData.country}
-            onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.country ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-          />
-          {errors.country && (
-            <p className="mt-1 text-sm text-red-600">{errors.country}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Password
           </label>
           <input
@@ -378,17 +399,17 @@ export const RegisterForm: React.FC = () => {
             type="password"
             value={formData.password}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.password ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.password ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password_confirmation" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Confirm Password
           </label>
           <input
@@ -397,27 +418,46 @@ export const RegisterForm: React.FC = () => {
             type="password"
             value={formData.password_confirmation}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border ${
-              errors.password_confirmation ? 'border-red-300' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+            className={`input ${
+              errors.password_confirmation ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            }`}
           />
           {errors.password_confirmation && (
-            <p className="mt-1 text-sm text-red-600">{errors.password_confirmation}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password_confirmation}</p>
           )}
         </div>
         
-        <div>
-          <button
+        <div className="pt-4">
+          <motion.button
             type="submit"
             disabled={isLoading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`btn-primary w-full ${
               isLoading ? 'opacity-75 cursor-not-allowed' : ''
             }`}
           >
-            {isLoading ? 'Registering...' : 'Register'}
-          </button>
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating Account...
+              </span>
+            ) : 'Create Account'}
+          </motion.button>
         </div>
-      </form>
-    </div>
+        
+        <div className="text-center pt-4">
+          <p className="text-sm text-dark-600 dark:text-light-400">
+            Already have an account?{' '}
+            <Link href="/business/login" className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
+              Login here
+            </Link>
+          </p>
+        </div>
+      </motion.form>
+    </motion.div>
   );
 };

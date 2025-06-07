@@ -10,6 +10,7 @@ import { BusinessAccountRepository } from '@/infrastructure/repositories/Busines
 import { ApiClient } from '@/infrastructure/api/ApiClient';
 import { storage } from '@/utils/storage';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export const LoginForm: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -118,28 +119,47 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-white px-6 py-8 rounded-lg shadow-md max-w-md w-full mx-auto">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="card p-8 max-w-md w-full mx-auto"
+    >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Business Login</h1>
-        <p className="text-gray-600 mt-2">Access your EasyDrop business account</p>
+        <h1 className="text-3xl font-bold text-dark-900 dark:text-white mb-2">Business Login</h1>
+        <p className="text-dark-500 dark:text-light-400">Access your EasyDrop business account</p>
       </div>
       
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6 text-sm"
+        >
           {error}
-        </div>
+        </motion.div>
       )}
       
       {successMessage && (
-        <div className="bg-green-50 text-green-600 p-3 rounded mb-4 text-sm">
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-lg mb-6 text-sm"
+        >
           {successMessage}
-        </div>
+        </motion.div>
       )}
       
       {step === 1 ? (
-        <form onSubmit={handleCredentialsSubmit} className="space-y-6">
+        <motion.form 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onSubmit={handleCredentialsSubmit} 
+          className="space-y-6"
+        >
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               Phone Number
             </label>
             <input
@@ -148,13 +168,13 @@ export const LoginForm: React.FC = () => {
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input"
               placeholder="+251978512230"
             />
           </div>
           
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               Password
             </label>
             <input
@@ -163,35 +183,51 @@ export const LoginForm: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input"
             />
           </div>
           
           <div>
-            <button
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`btn-primary w-full ${
                 isLoading ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
-              {isLoading ? 'Sending OTP...' : 'Get OTP'}
-            </button>
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending OTP...
+                </span>
+              ) : 'Get OTP'}
+            </motion.button>
           </div>
           
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
+          <div className="text-center pt-4">
+            <p className="text-sm text-dark-600 dark:text-light-400">
               Don't have an account?{' '}
-              <Link href="/business/register" className="text-blue-600 hover:text-blue-500">
+              <Link href="/business/register" className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
                 Register here
               </Link>
             </p>
           </div>
-        </form>
+        </motion.form>
       ) : (
-        <form onSubmit={handleOtpSubmit} className="space-y-6">
+        <motion.form 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onSubmit={handleOtpSubmit} 
+          className="space-y-6"
+        >
           <div>
-            <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="otp" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
               Enter OTP
             </label>
             <input
@@ -200,34 +236,45 @@ export const LoginForm: React.FC = () => {
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="input"
               placeholder="Enter the OTP sent to your phone"
             />
           </div>
           
           <div>
-            <button
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`btn-primary w-full ${
                 isLoading ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
-              {isLoading ? 'Verifying...' : 'Verify OTP'}
-            </button>
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Verifying...
+                </span>
+              ) : 'Verify OTP'}
+            </motion.button>
           </div>
           
-          <div className="text-center">
-            <button
+          <div className="text-center pt-4">
+            <motion.button
               type="button"
               onClick={() => setStep(1)}
-              className="text-sm text-blue-600 hover:text-blue-500"
+              whileHover={{ scale: 1.05 }}
+              className="text-sm text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
             >
               Back to credentials
-            </button>
+            </motion.button>
           </div>
-        </form>
+        </motion.form>
       )}
-    </div>
+    </motion.div>
   );
 }; 
