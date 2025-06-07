@@ -6,6 +6,29 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOrders } from '@/hooks/useOrders';
 import { ValidationError } from '@/domain/errors/AppError';
+import { motion } from 'framer-motion';
+import { ClipLoader } from 'react-spinners';
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      duration: 0.6 
+    }
+  }
+};
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { 
+      duration: 0.5 
+    }
+  }
+};
 
 interface OrderFormData {
   customer_name: string;
@@ -181,27 +204,42 @@ export default function CreateOrderPage() {
   
   return (
     <ProtectedRoute>
-      <div className="container mx-auto py-12 px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create New Order</h1>
-          <p className="text-gray-600 mt-2">
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+        className="container mx-auto py-12 px-4"
+      >
+        <motion.div 
+          variants={fadeInUp}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-dark-900 dark:text-white mb-2">Create New Order</h1>
+          <p className="text-dark-600 dark:text-light-400">
             Fill in the details below to create a new delivery order
           </p>
-        </div>
+        </motion.div>
         
         {generalError && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6"
+          >
             {generalError}
-          </div>
+          </motion.div>
         )}
         
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <motion.div 
+          variants={fadeInUp}
+          className="card overflow-hidden"
+        >
           <form onSubmit={handleSubmit} className="p-6">
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Customer Information</h2>
+              <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Customer Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="customer_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="customer_name" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Customer Name *
                   </label>
                   <input
@@ -210,17 +248,17 @@ export default function CreateOrderPage() {
                     name="customer_name"
                     value={formData.customer_name}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${
-                      errors.customer_name ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    className={`input ${
+                      errors.customer_name ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
                   />
                   {errors.customer_name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.customer_name}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.customer_name}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label htmlFor="customer_email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="customer_email" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Customer Email *
                   </label>
                   <input
@@ -229,17 +267,17 @@ export default function CreateOrderPage() {
                     name="customer_email"
                     value={formData.customer_email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${
-                      errors.customer_email ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    className={`input ${
+                      errors.customer_email ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
                   />
                   {errors.customer_email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.customer_email}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.customer_email}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label htmlFor="customer_phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="customer_phone" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Customer Phone *
                   </label>
                   <input
@@ -248,22 +286,22 @@ export default function CreateOrderPage() {
                     name="customer_phone"
                     value={formData.customer_phone}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${
-                      errors.customer_phone ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    className={`input ${
+                      errors.customer_phone ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
                   />
                   {errors.customer_phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.customer_phone}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.customer_phone}</p>
                   )}
                 </div>
               </div>
             </div>
             
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Delivery Information</h2>
+              <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Delivery Information</h2>
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label htmlFor="delivery_address" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="delivery_address" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Delivery Address *
                   </label>
                   <input
@@ -272,18 +310,18 @@ export default function CreateOrderPage() {
                     name="delivery_address"
                     value={formData.delivery_address}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${
-                      errors.delivery_address ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    className={`input ${
+                      errors.delivery_address ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
                   />
                   {errors.delivery_address && (
-                    <p className="mt-1 text-sm text-red-600">{errors.delivery_address}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.delivery_address}</p>
                   )}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label htmlFor="delivery_city" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="delivery_city" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                       City *
                     </label>
                     <input
@@ -292,17 +330,17 @@ export default function CreateOrderPage() {
                       name="delivery_city"
                       value={formData.delivery_city}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${
-                        errors.delivery_city ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      className={`input ${
+                        errors.delivery_city ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                      }`}
                     />
                     {errors.delivery_city && (
-                      <p className="mt-1 text-sm text-red-600">{errors.delivery_city}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.delivery_city}</p>
                     )}
                   </div>
                   
                   <div>
-                    <label htmlFor="delivery_postal_code" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="delivery_postal_code" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                       Postal Code *
                     </label>
                     <input
@@ -311,17 +349,17 @@ export default function CreateOrderPage() {
                       name="delivery_postal_code"
                       value={formData.delivery_postal_code}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${
-                        errors.delivery_postal_code ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      className={`input ${
+                        errors.delivery_postal_code ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                      }`}
                     />
                     {errors.delivery_postal_code && (
-                      <p className="mt-1 text-sm text-red-600">{errors.delivery_postal_code}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.delivery_postal_code}</p>
                     )}
                   </div>
                   
                   <div>
-                    <label htmlFor="delivery_country" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="delivery_country" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                       Country *
                     </label>
                     <input
@@ -330,12 +368,12 @@ export default function CreateOrderPage() {
                       name="delivery_country"
                       value={formData.delivery_country}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${
-                        errors.delivery_country ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      className={`input ${
+                        errors.delivery_country ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                      }`}
                     />
                     {errors.delivery_country && (
-                      <p className="mt-1 text-sm text-red-600">{errors.delivery_country}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.delivery_country}</p>
                     )}
                   </div>
                 </div>
@@ -343,10 +381,10 @@ export default function CreateOrderPage() {
             </div>
             
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Parcel Information</h2>
+              <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Parcel Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="parcel_size" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="parcel_size" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Parcel Size *
                   </label>
                   <select
@@ -354,7 +392,7 @@ export default function CreateOrderPage() {
                     name="parcel_size"
                     value={formData.parcel_size}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="input"
                   >
                     <option value="small">Small</option>
                     <option value="medium">Medium</option>
@@ -363,7 +401,7 @@ export default function CreateOrderPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="parcel_weight" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="parcel_weight" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                     Weight (kg) *
                   </label>
                   <input
@@ -372,12 +410,12 @@ export default function CreateOrderPage() {
                     name="parcel_weight"
                     value={formData.parcel_weight}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${
-                      errors.parcel_weight ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    className={`input ${
+                      errors.parcel_weight ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
                   />
                   {errors.parcel_weight && (
-                    <p className="mt-1 text-sm text-red-600">{errors.parcel_weight}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.parcel_weight}</p>
                   )}
                 </div>
                 
@@ -388,9 +426,9 @@ export default function CreateOrderPage() {
                     name="is_fragile"
                     checked={formData.is_fragile}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-light-300 dark:border-dark-600 rounded"
                   />
-                  <label htmlFor="is_fragile" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="is_fragile" className="ml-2 block text-sm text-dark-700 dark:text-light-300">
                     Fragile Item
                   </label>
                 </div>
@@ -398,7 +436,7 @@ export default function CreateOrderPage() {
             </div>
             
             <div className="mb-8">
-              <label htmlFor="delivery_notes" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="delivery_notes" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
                 Delivery Notes
               </label>
               <textarea
@@ -407,32 +445,41 @@ export default function CreateOrderPage() {
                 rows={3}
                 value={formData.delivery_notes}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="input"
                 placeholder="Special instructions for the delivery"
               ></textarea>
             </div>
             
             <div className="flex justify-end space-x-4">
-              <button
+              <motion.button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="btn-outline"
               >
                 Cancel
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="submit"
                 disabled={loading}
-                className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`btn-primary ${
                   loading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
               >
-                {loading ? 'Creating...' : 'Create Order'}
-              </button>
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <ClipLoader color="#ffffff" size={16} className="mr-2" />
+                    Creating...
+                  </span>
+                ) : 'Create Order'}
+              </motion.button>
             </div>
           </form>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </ProtectedRoute>
   );
 } 
