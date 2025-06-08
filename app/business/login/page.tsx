@@ -3,6 +3,7 @@
 import { LoginForm } from '@/components/business/LoginForm';
 import { Metadata } from 'next';
 import { motion } from 'framer-motion';
+import { Suspense } from 'react';
 
 export default function BusinessLoginPage() {
   return (
@@ -32,7 +33,9 @@ export default function BusinessLoginPage() {
           <p className="text-dark-600 dark:text-light-400">Login to your EasyDrop business account</p>
         </motion.div>
         
-        <LoginForm />
+        <Suspense fallback={<div className="text-center p-4">Loading...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
