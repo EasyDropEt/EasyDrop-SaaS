@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/layout/Navigation";
 import { BusinessProvider } from "@/context/BusinessContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { MapProvider } from "@/providers/map-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +35,11 @@ export default function RootLayout({
           <BusinessProvider>
             <div className="flex flex-col min-h-screen">
               <Navigation />
-              <main className="flex-grow">
-                {children}
-              </main>
+                <MapProvider>
+                  <main className="flex-grow">
+                    {children}
+                  </main>
+                </MapProvider>
               <footer className="py-8 border-t border-light-300 dark:border-dark-700">
                 <div className="container mx-auto px-4 text-center text-dark-500 dark:text-light-500 text-sm">
                   &copy; {new Date().getFullYear()} EasyDrop. All rights reserved.
