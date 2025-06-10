@@ -82,11 +82,16 @@ export const CreateOrderForm: React.FC<CreateOrderFormProps> = ({
       return;
     }
 
-    if (parcel.weight <= 0 || parcel.dimensions.length <= 0 || 
-        parcel.dimensions.width <= 0 || parcel.dimensions.height <= 0) {
+    if (parcel.weight <= 0 || 
+      !parcel.dimensions?.length || 
+      !parcel.dimensions?.width || 
+      !parcel.dimensions?.height || 
+      parcel.dimensions?.length <= 0 ||
+      parcel.dimensions?.width <= 0 || 
+      parcel.dimensions?.height <= 0) {
       setFormError('Please enter valid parcel dimensions and weight');
       return;
-    }
+  }
 
     if (!latestTimeOfArrival) {
       setFormError('Please select a delivery time');
@@ -209,7 +214,7 @@ export const CreateOrderForm: React.FC<CreateOrderFormProps> = ({
               <input
                 type="number"
                 name="dimensions.length"
-                value={parcel.dimensions.length}
+                value={parcel.dimensions?.length ?? 0}
                 onChange={handleParcelChange}
                 min="1"
                 className="w-full p-2 border rounded"
@@ -221,7 +226,7 @@ export const CreateOrderForm: React.FC<CreateOrderFormProps> = ({
               <input
                 type="number"
                 name="dimensions.width"
-                value={parcel.dimensions.width}
+                value={parcel.dimensions?.width ?? 0}
                 onChange={handleParcelChange}
                 min="1"
                 className="w-full p-2 border rounded"
@@ -233,7 +238,7 @@ export const CreateOrderForm: React.FC<CreateOrderFormProps> = ({
               <input
                 type="number"
                 name="dimensions.height"
-                value={parcel.dimensions.height}
+                value={parcel.dimensions?.height ?? 0}
                 onChange={handleParcelChange}
                 min="1"
                 className="w-full p-2 border rounded"
