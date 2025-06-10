@@ -133,7 +133,7 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
                                         <Marker
                                             position={getLatLng(sourceLocation)}
                                             icon={markerIcons.shop}
-                                            onClick={() => window.alert('Business Location')}
+                                            title="Business Location"
                                         />
                                     )}
                                     
@@ -142,7 +142,7 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
                                         <Marker
                                             position={getLatLng(destinationLocation)}
                                             icon={markerIcons.destination}
-                                            onClick={() => window.alert('Delivery Destination')}
+                                            title="Delivery Destination"
                                         />
                                     )}
                                     
@@ -151,7 +151,7 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
                                         <Marker
                                             position={getLatLng(driverLocation)}
                                             icon={markerIcons.driver}
-                                            onClick={() => window.alert('Driver Location')}
+                                            title="Driver Location"
                                         />
                                     )}
                                 </>
