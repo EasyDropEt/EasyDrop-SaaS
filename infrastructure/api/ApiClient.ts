@@ -13,6 +13,10 @@ export class ApiClient {
     this.authToken = token;
   }
 
+  setBaseUrl(url: string) {
+    this.baseUrl = url;
+  }
+
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
