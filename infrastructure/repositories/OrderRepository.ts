@@ -45,10 +45,10 @@ export class OrderRepository implements IOrderRepository {
     return {
       id: apiOrder.id,
       consumer: apiOrder.consumer,
-      bill_id: apiOrder.bill_id,
-      latest_time_of_arrival: new Date(apiOrder.latest_time_of_arrival),
+      bill_id: apiOrder.bill?.id || apiOrder.bill_id,
+      latest_time_of_arrival: new Date(apiOrder.latest_time_of_delivery || apiOrder.latest_time_of_arrival),
       parcel: apiOrder.parcel,
-      status: apiOrder.status,
+      status: apiOrder.order_status || apiOrder.status,
       delivery_job_id: apiOrder.delivery_job_id
     };
   }
@@ -120,14 +120,21 @@ export class OrderRepository implements IOrderRepository {
     const response = await this.apiClient.get<{
       is_success: boolean;
       message: string;
-      data: TrackOrderDto;
+      data: {
+        order: any;
+        driver?: any;
+      };
       errors: any[];
-    }>(`/business/me/orders/${orderId}/track`);
+    }>(`/orders/${orderId}/track`);
     
     if (!response.is_success || !response.data) {
       throw new Error(response.message || 'Failed to track order');
     }
-    
-    return response.data;
+
+    // Transform API response to domain entity
+    return {
+      order: this.transformApiOrderToEntity(response.data.order),
+      driver: response.data.driver
+    };
   }
 } 
