@@ -11,6 +11,23 @@ export interface Order {
   delivery_job_id: string;
 }
 
+export interface TrackOrderDto {
+  driver_location: {
+    latitude: number;
+    longitude: number;
+  };
+  source_location: {
+    latitude: number;
+    longitude: number;
+  };
+  destination_location: {
+    latitude: number;
+    longitude: number;
+  };
+  estimated_arrival_time: string; // ISO date string
+  status: "PENDING" | "PICKED_UP" | "DELIVERED" | "CANCELLED";
+}
+
 export interface CreateOrdersDto {
   orders: {
     recipient: {

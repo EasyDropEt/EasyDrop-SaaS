@@ -3,6 +3,7 @@ import { useOrderContext } from '@/context/OrderContext';
 import { Order } from '@/domain/entities/Order';
 import { motion } from 'framer-motion';
 import { PulseLoader } from 'react-spinners';
+import { MapComponent } from './map';
 
 const fadeIn = {
   hidden: { opacity: 0 },
@@ -76,7 +77,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
         animate={{ opacity: 1 }}
         className="card p-12 text-center text-dark-600 dark:text-light-400"
       >
-        Order not found.
+        <p className="text-xl font-semibold mb-4">Order not found.</p>
+        <p className="mb-6">The order you're looking for doesn't exist or may have been deleted.</p>
+        {orderId && (
+          <div className="mt-8 p-6 border-t border-light-300 dark:border-dark-600">
+            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-3">Track Delivery</h3>
+            <div className="mt-4">
+              <MapComponent orderId={orderId} />
+            </div>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -110,7 +120,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
         >
           Order Details
         </motion.h2>
-        
+
         <motion.div 
           variants={staggerContainer}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -189,6 +199,12 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
             </p>
           </div>
         </motion.div>
+      </div>
+      <div className="p-6 w-full mx-auto">
+        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-3 pb-2 border-b border-light-300 dark:border-dark-700">Track Delivery</h3>
+        <div className="mt-4">
+          <MapComponent orderId={orderId} />
+        </div>
       </div>
     </motion.div>
   );
