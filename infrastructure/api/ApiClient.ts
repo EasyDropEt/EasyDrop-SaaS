@@ -2,9 +2,31 @@ import { AppError, AuthenticationError, AuthorizationError, NotFoundError } from
 
 export class ApiClient {
   private baseUrl: string;
+  private authToken: string | null = null;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    // Use mock server by default, allow override with environment variable
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  }
+
+  setAuthToken(token: string) {
+    this.authToken = token;
+  }
+
+  setBaseUrl(url: string) {
+    this.baseUrl = url;
+  }
+
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    return headers;
   }
 
   private handleError(error: any): never {
@@ -41,10 +63,13 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     try {
+      const headers = this.getHeaders();
+      console.log('Request headers:', headers);
+      
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
           ...options.headers,
         },
       });
