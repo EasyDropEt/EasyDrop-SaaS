@@ -91,7 +91,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId }) => {
           <p className="text-dark-600 dark:text-light-400">The order you're looking for doesn't exist or may have been deleted.</p>
         </div>
         
-        {orderId && (
+        {orderId && currentOrder && (
           <div className="mt-8 p-6 border-t border-light-300 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/40 rounded-b-xl">
             <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-3">Track Delivery</h3>
             <div className="mt-4 overflow-hidden rounded-xl shadow-md">
