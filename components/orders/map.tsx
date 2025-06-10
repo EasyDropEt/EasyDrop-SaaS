@@ -20,7 +20,7 @@ interface MapComponentProps {
 
 const MapComponent = ({ orderId }: MapComponentProps) => {
     // Use custom hook for tracking order
-    const { trackData, loading, error } = useTrackOrder(orderId);
+    const { trackData, order, driver, loading, error } = useTrackOrder(orderId);
     
     // Use custom hook for map directions and markers
     const {
@@ -33,7 +33,10 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
         getLatLng,
         directionsServiceOptions,
         directionsRendererOptions,
-        markerIcons
+        markerIcons,
+        sourceLocation,
+        destinationLocation,
+        driverLocation
     } = useMapDirections(trackData);
 
     // Handle authentication error specifically
@@ -51,14 +54,19 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
             )}
             
             {error && (
-                <div className="p-6 text-center bg-gray-50 dark:bg-dark-900/40 rounded-xl">
-                    <div className={`mb-2 p-4 rounded-lg shadow-sm ${isAuthError ? 'bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400' : 'bg-red-50 border border-red-200 text-red-600 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400'}`}>
-                        <div className="flex items-center space-x-3">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <p className="font-semibold">{error}</p>
-                        </div>
+                <div className="p-8 flex justify-center items-center min-h-[200px] bg-gray-50 dark:bg-dark-900/40 rounded-xl">
+                    <div className="text-center max-w-md mx-auto">
+                        <svg className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 className="text-lg font-medium text-dark-900 dark:text-white mb-2">Error Loading Map</h3>
+                        <p className="text-dark-500 dark:text-light-400 mb-4">{error}</p>
+                        
+                        {isAuthError && (
+                            <Link href="/login" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none">
+                                Sign In
+                            </Link>
+                        )}
                     </div>
                 </div>
             )}
@@ -121,53 +129,75 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
                             {trackData && (
                                 <>
                                     {/* Business/Source Marker */}
-                                    <Marker
-                                        position={getLatLng(trackData.source_location)}
-                                        icon={markerIcons.shop}
-                                        onClick={() => window.alert('Business Location')}
-                                    />
+                                    {sourceLocation && (
+                                        <Marker
+                                            position={getLatLng(sourceLocation)}
+                                            icon={markerIcons.shop}
+                                            onClick={() => window.alert('Business Location')}
+                                        />
+                                    )}
                                     
                                     {/* Destination Marker */}
-                                    <Marker
-                                        position={getLatLng(trackData.destination_location)}
-                                        icon={markerIcons.destination}
-                                        onClick={() => window.alert('Delivery Destination')}
-                                    />
+                                    {destinationLocation && (
+                                        <Marker
+                                            position={getLatLng(destinationLocation)}
+                                            icon={markerIcons.destination}
+                                            onClick={() => window.alert('Delivery Destination')}
+                                        />
+                                    )}
                                     
                                     {/* Driver Marker */}
-                                    <Marker
-                                        position={getLatLng(trackData.driver_location)}
-                                        icon={markerIcons.driver}
-                                        onClick={() => window.alert('Driver Location')}
-                                    />
+                                    {driverLocation && (
+                                        <Marker
+                                            position={getLatLng(driverLocation)}
+                                            icon={markerIcons.driver}
+                                            onClick={() => window.alert('Driver Location')}
+                                        />
+                                    )}
                                 </>
                             )}
                         </GoogleMap>
                     </div>
                     
-                    {trackData && (
-                        <div className="mt-4 p-5 bg-white dark:bg-dark-800 rounded-xl shadow-md border border-light-200 dark:border-dark-700">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                                <div className="mb-3 sm:mb-0">
-                                    <h3 className="text-lg font-semibold text-dark-900 dark:text-white flex items-center">
-                                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-2 ${trackData.status === 'DELIVERED' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400'}`}>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                            </svg>
-                                        </span>
-                                        Delivery Status: {trackData.status}
+                    {trackData && order && (
+                        <div className="bg-white dark:bg-dark-800 shadow-sm rounded-b-lg border border-t-0 border-gray-200 dark:border-dark-700 p-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                                <div>
+                                    <h3 className="text-base font-medium text-dark-900 dark:text-white">
+                                        Order #{order.id.substring(0, 8)}
                                     </h3>
-                                    <p className="text-dark-600 dark:text-light-400 mt-1">
-                                        Estimated arrival: <span className="font-medium">{new Date(trackData.estimated_arrival_time).toLocaleTimeString()}</span>
+                                    <p className="text-sm text-dark-500 dark:text-light-400">
+                                        {order.status || order.order_status || 'Status Unknown'}
                                     </p>
                                 </div>
-                                <div className="flex space-x-3">
+                                
+                                {driver && (
+                                    <div className="mt-2 sm:mt-0 bg-light-100 dark:bg-dark-700 rounded-lg p-2 flex items-center">
+                                        <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mr-2">
+                                            <svg className="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-dark-500 dark:text-light-400">Driver</p>
+                                            <p className="text-sm font-medium text-dark-900 dark:text-white">
+                                                {driver.first_name} {driver.last_name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex space-x-3">
+                                {order.latest_time_of_delivery && (
                                     <div className="px-3 py-2 bg-light-100 dark:bg-dark-700 rounded-lg flex items-center text-sm text-dark-700 dark:text-light-300">
                                         <svg className="w-4 h-4 mr-1 text-dark-500 dark:text-light-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        <span>On Time</span>
+                                        <span>Expected Delivery: {new Date(order.latest_time_of_delivery).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                     </div>
+                                )}
+                                {driver && (
                                     <div className="px-3 py-2 bg-light-100 dark:bg-dark-700 rounded-lg flex items-center text-sm text-dark-700 dark:text-light-300">
                                         <svg className="w-4 h-4 mr-1 text-dark-500 dark:text-light-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -175,7 +205,7 @@ const MapComponent = ({ orderId }: MapComponentProps) => {
                                         </svg>
                                         <span>Live Tracking</span>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     )}
