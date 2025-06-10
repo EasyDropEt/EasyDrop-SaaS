@@ -74,11 +74,17 @@ export default function OrdersPage() {
     }
   }, [orders, selectedTab]);
 
-  const getOrderStatusClass = (status: string): string => {
-    switch (status.toLowerCase()) {
+  const getOrderStatusClass = (status: string | undefined): string => {
+    if (!status) return 'bg-gray-600 text-white';
+    
+    const statusLower = status.toLowerCase();
+    
+    switch (statusLower) {
       case 'delivered':
+      case 'completed':
         return 'bg-green-600 text-white';
       case 'picked_up':
+      case 'in_progress':
         return 'bg-blue-600 text-white';
       case 'pending':
         return 'bg-yellow-500 text-black';
@@ -246,7 +252,7 @@ export default function OrdersPage() {
                         Order ID
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-500 dark:text-light-400 uppercase tracking-wider">
-                        Customer
+                        Consumer
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-500 dark:text-light-400 uppercase tracking-wider">
                         Status
@@ -279,11 +285,11 @@ export default function OrdersPage() {
                             {order.id.substring(0, 8)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-600 dark:text-light-300">
-                            {order.consumer?.name || 'Customer'}
+                            {order.consumer?.first_name + ' ' + order.consumer?.last_name || 'Consumer'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${getOrderStatusClass(order.status)}`}>
-                              {order.status}
+                              {order.status || 'Unknown'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-600 dark:text-light-300">
