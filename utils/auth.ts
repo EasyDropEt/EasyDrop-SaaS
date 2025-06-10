@@ -15,7 +15,8 @@ export const saveAuthToken = (token: string): void => {
  */
 export const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdF9uYW1lIjoiU2hhbWlsIiwibGFzdF9uYW1lIjoiQmVkcnUiLCJlbWFpbCI6InNoYW1pbGJlZHJ1NDdAZ21haWwuY29tIiwicGhvbmVfbnVtYmVyIjoiMjUxOTQ4NjcxNTYzIiwidXNlcl90eXBlIjoiZHJpdmVyIn0.L3CyCw2YLoh5_lfYnmt2X-_hEzGujkF_1wyapMgn_Sg'
+    // return localStorage.getItem(AUTH_TOKEN_KEY);
   }
   return null;
 };
