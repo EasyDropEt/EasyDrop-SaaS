@@ -13,17 +13,36 @@ export const useMapDirections = (trackData: TrackOrderDto | null) => {
   // Track if directions service has been called to avoid multiple calls
   const directionsRequested = useRef(false);
 
+  // Extract business and consumer locations from order data
+  const sourceLocation = useMemo(() => {
+    return trackData?.order?.business?.location || null;
+  }, [trackData]);
+
+  const destinationLocation = useMemo(() => {
+    return trackData?.order?.consumer?.location || null;
+  }, [trackData]);
+
+  const driverLocation = useMemo(() => {
+    return trackData?.driver?.location || null;
+  }, [trackData]);
+
   // Reset directions requested flag when trackData changes significantly
   useEffect(() => {
-    if (trackData) {
+    if (trackData && sourceLocation && destinationLocation) {
       directionsRequested.current = false;
     }
   }, [
-    trackData?.source_location.latitude,
-    trackData?.source_location.longitude,
-    trackData?.destination_location.latitude,
-    trackData?.destination_location.longitude
+    trackData,
+    sourceLocation?.latitude,
+    sourceLocation?.longitude,
+    destinationLocation?.latitude,
+    destinationLocation?.longitude
   ]);
+
+  // Helper function to get LatLng from location object
+  const getLatLng = useCallback((location: { latitude: number, longitude: number } | null) => {
+    return location ? { lat: location.latitude, lng: location.longitude } : { lat: 0, lng: 0 };
+  }, []);
 
   // Get directions when tracking data is available
   const directionsCallback = useCallback((result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
@@ -37,12 +56,18 @@ export const useMapDirections = (trackData: TrackOrderDto | null) => {
   }, []);
 
   // Map settings
-  // Convert driver location from TrackOrderDto to Google Maps LatLng format
+  // Center map on driver if available, otherwise on destination
   const defaultMapCenter = useMemo(() => {
-    return trackData ? 
-      { lat: trackData.driver_location.latitude, lng: trackData.driver_location.longitude } : 
-      { lat: 35.8799866, lng: 76.5048004 };
-  }, [trackData]);
+    if (driverLocation) {
+      return { lat: driverLocation.latitude, lng: driverLocation.longitude };
+    } else if (destinationLocation) {
+      return { lat: destinationLocation.latitude, lng: destinationLocation.longitude };
+    } else if (sourceLocation) {
+      return { lat: sourceLocation.latitude, lng: sourceLocation.longitude };
+    } else {
+      return { lat: 9.0222, lng: 38.7468 }; // Default to Addis Ababa
+    }
+  }, [driverLocation, destinationLocation, sourceLocation]);
 
   const defaultMapZoom = 14;
 
@@ -55,53 +80,47 @@ export const useMapDirections = (trackData: TrackOrderDto | null) => {
     clickableIcons: false,
   }), []);
 
-  // Convert our location objects to Google Maps LatLng objects
-  const getLatLng = useCallback((location: { latitude: number, longitude: number }) => {
-    return { lat: location.latitude, lng: location.longitude };
-  }, []);
-
-  // Memoize direction service options
+  // Set up directions service options when tracking data is available
   const directionsServiceOptions = useMemo(() => {
-    if (!trackData) return null;
-    
-    return {
-      origin: getLatLng(trackData.source_location),
-      destination: getLatLng(trackData.destination_location),
-      travelMode: google.maps.TravelMode.DRIVING,
-    };
-  }, [trackData, getLatLng]);
+    if (!sourceLocation || !destinationLocation) return null;
 
-  // Memoize directions renderer options
-  const directionsRendererOptions = useMemo(() => {
-    if (!directions) return null;
-    
     return {
-      directions: directions,
-      suppressMarkers: true, // We'll use our own custom markers
-      preserveViewport: true, // Important - prevents map from moving on each render
-    };
+      origin: getLatLng(sourceLocation),
+      destination: getLatLng(destinationLocation),
+      travelMode: google.maps.TravelMode.DRIVING,
+    } as google.maps.DirectionsRequest;
+  }, [sourceLocation, destinationLocation, getLatLng]);
+
+  // Set up directions renderer options
+  const directionsRendererOptions = useMemo(() => {
+    return directions ? {
+      directions,
+      options: {
+        polylineOptions: {
+          strokeColor: '#3B82F6',
+          strokeWeight: 5,
+          strokeOpacity: 0.8,
+        },
+        suppressMarkers: true, // We'll add our own custom markers
+      },
+    } : null;
   }, [directions]);
 
-  // Define custom marker icons
-  const markerIcons = useMemo(() => {
-    return {
-      shop: {
-        url: '/images/shop-marker.svg',
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 20),
-      },
-      destination: {
-        url: '/images/destination-marker.svg',
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 20),
-      },
-      driver: {
-        url: '/images/delivery-marker.svg',
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 20),
-      }
-    };
-  }, []);
+  // Custom marker icons
+  const markerIcons = useMemo(() => ({
+    shop: {
+      url: '/images/shop-marker.svg',
+      scaledSize: typeof google !== 'undefined' ? new google.maps.Size(40, 40) : null,
+    },
+    driver: {
+      url: '/images/delivery-marker.svg',
+      scaledSize: typeof google !== 'undefined' ? new google.maps.Size(40, 40) : null,
+    },
+    destination: {
+      url: '/images/destination-marker.svg',
+      scaledSize: typeof google !== 'undefined' ? new google.maps.Size(40, 40) : null,
+    },
+  }), []);
 
   return {
     directions,
@@ -113,6 +132,9 @@ export const useMapDirections = (trackData: TrackOrderDto | null) => {
     getLatLng,
     directionsServiceOptions,
     directionsRendererOptions,
-    markerIcons
+    markerIcons,
+    sourceLocation,
+    destinationLocation,
+    driverLocation
   };
 }; 

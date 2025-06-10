@@ -8,13 +8,13 @@ import { ApiClient } from '@/infrastructure/api/ApiClient';
 import { getAuthToken } from '@/utils/auth';
 
 /**
- * Hook for tracking an order's delivery status
+ * Hook for tracking an order's delivery status and details
  * @param orderId The ID of the order to track
  * @param pollingInterval How often to check for updates (in ms)
  */
 export const useTrackOrder = (
   orderId?: string, 
-  pollingInterval: number = 30000
+  pollingInterval: number = 180000
 ) => {
   const [trackData, setTrackData] = useState<TrackOrderDto | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -62,13 +62,15 @@ export const useTrackOrder = (
         setTrackData(prevData => {
           if (!prevData) return data;
           
-          // Compare with previous data
-          const isSame = 
-            prevData.driver_location.latitude === data.driver_location.latitude &&
-            prevData.driver_location.longitude === data.driver_location.longitude &&
-            prevData.status === data.status;
+          // Compare with previous data to see if anything important changed
+          const hasDriverChanged = !prevData.driver && data.driver;
+          const hasDriverLocationChanged = prevData.driver && data.driver && (
+            prevData.driver.location.latitude !== data.driver.location.latitude ||
+            prevData.driver.location.longitude !== data.driver.location.longitude
+          );
+          const hasStatusChanged = prevData.order.status !== data.order.status;
             
-          return isSame ? prevData : data;
+          return (hasDriverChanged || hasDriverLocationChanged || hasStatusChanged) ? data : prevData;
         });
         
         setError(null);
@@ -89,5 +91,11 @@ export const useTrackOrder = (
     return () => clearInterval(intervalId);
   }, [orderId, pollingInterval]);
 
-  return { trackData, loading, error };
+  return { 
+    trackData, 
+    loading, 
+    error,
+    order: trackData?.order || null,
+    driver: trackData?.driver || null
+  };
 }; 
