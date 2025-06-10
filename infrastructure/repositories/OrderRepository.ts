@@ -1,4 +1,4 @@
-import { Order } from '@/domain/entities/Order';
+import { Order, TrackOrderDto } from '@/domain/entities/Order';
 import { IOrderRepository } from '@/domain/repositories/IOrderRepository';
 import { ApiClient } from '../api/ApiClient';
 
@@ -114,5 +114,20 @@ export class OrderRepository implements IOrderRepository {
     
     // Transform API response to domain entity
     return this.transformApiOrderToEntity(response.data);
+  }
+
+  async trackOrder(orderId: string): Promise<TrackOrderDto> {
+    const response = await this.apiClient.get<{
+      is_success: boolean;
+      message: string;
+      data: TrackOrderDto;
+      errors: any[];
+    }>(`/business/me/orders/${orderId}/track`);
+    
+    if (!response.is_success || !response.data) {
+      throw new Error(response.message || 'Failed to track order');
+    }
+    
+    return response.data;
   }
 } 
