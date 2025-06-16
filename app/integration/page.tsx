@@ -41,6 +41,8 @@ export default function IntegrationPage() {
   const [apiKeyDescription, setApiKeyDescription] = useState<string>('');
   const [creatingWebhook, setCreatingWebhook] = useState<boolean>(false);
   const [creatingKey, setCreatingKey] = useState<boolean>(false);
+  const [keyPendingDelete, setKeyPendingDelete] = useState<{ name?: string; prefix: string } | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
 
   // Update input when webhook data changes
   useEffect(() => {
@@ -204,7 +206,7 @@ export default function IntegrationPage() {
                         </td>
                         <td className="px-4 py-2 text-right">
                           <button
-                            onClick={() => deleteApiKey((key as any).api_key_prefix ?? (key as any).prefix)}
+                            onClick={() => setKeyPendingDelete({ name: key.name, prefix: (key as any).api_key_prefix ?? (key as any).prefix })}
                             className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                           >
                             Delete
@@ -226,6 +228,41 @@ export default function IntegrationPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Delete confirmation modal */}
+      {keyPendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-dark-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">Delete API Key</h3>
+            <p className="text-dark-600 dark:text-light-400 mb-6">
+              Are you sure you want to delete the API key <span className="font-semibold">{keyPendingDelete.name || keyPendingDelete.prefix}</span>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setKeyPendingDelete(null)}
+                className="px-4 py-2 rounded-md bg-light-200 dark:bg-dark-700 text-dark-900 dark:text-light-200 hover:bg-light-300 dark:hover:bg-dark-600"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deleting}
+                onClick={async () => {
+                  try {
+                    setDeleting(true);
+                    await deleteApiKey(keyPendingDelete.prefix);
+                    setKeyPendingDelete(null);
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-60"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 } 
