@@ -44,6 +44,7 @@ export class OrderRepository implements IOrderRepository {
   private transformApiOrderToEntity(apiOrder: any): Order {
     return {
       id: apiOrder.id,
+      business: apiOrder.business,
       consumer: apiOrder.consumer,
       bill_id: apiOrder.bill?.id || apiOrder.bill_id,
       latest_time_of_arrival: new Date(apiOrder.latest_time_of_delivery || apiOrder.latest_time_of_arrival),
