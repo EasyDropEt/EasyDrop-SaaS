@@ -8,6 +8,7 @@ import { GetApiKeysUseCase } from '@/application/useCases/integration/GetApiKeys
 import { CreateApiKeyUseCase } from '@/application/useCases/integration/CreateApiKeyUseCase';
 import { DeleteApiKeyUseCase } from '@/application/useCases/integration/DeleteApiKeyUseCase';
 import { useBusinessContext } from '@/context/BusinessContext';
+import { toast } from 'react-hot-toast';
 
 export const useIntegration = () => {
   const { token, isAuthenticated } = useBusinessContext();
@@ -33,6 +34,7 @@ export const useIntegration = () => {
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to fetch webhook');
+      toast.error(err.message || 'Failed to fetch webhook');
     }
   };
 
@@ -45,6 +47,7 @@ export const useIntegration = () => {
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to fetch API keys');
+      toast.error(err.message || 'Failed to fetch API keys');
     }
   };
 
@@ -64,6 +67,7 @@ export const useIntegration = () => {
     const createWebhookUseCase = new CreateWebhookUseCase(repo);
     await createWebhookUseCase.execute(data);
     await fetchWebhook();
+    toast.success('Webhook saved');
   };
 
   const createApiKey = async (data: CreateApiKeyDto) => {
@@ -72,6 +76,7 @@ export const useIntegration = () => {
     const key = await createApiKeyUseCase.execute(data);
     setNewlyCreatedApiKey(key);
     await fetchApiKeys();
+    toast.success('API key created');
   };
 
   const deleteApiKey = async (prefix: string) => {
@@ -79,6 +84,7 @@ export const useIntegration = () => {
     const deleteApiKeyUseCase = new DeleteApiKeyUseCase(repo);
     await deleteApiKeyUseCase.execute(prefix);
     await fetchApiKeys();
+    toast.success('API key deleted');
   };
 
   useEffect(() => {

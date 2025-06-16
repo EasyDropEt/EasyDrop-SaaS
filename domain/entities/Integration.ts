@@ -19,6 +19,7 @@ export interface ApiKeyDto {
   last_used_at?: string;
   // Some APIs return the full key only on creation – keep optional
   api_key?: string;
+  key?: string;
 }
 
 export interface CreateApiKeyDto {

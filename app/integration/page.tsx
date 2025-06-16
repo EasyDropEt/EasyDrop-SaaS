@@ -5,6 +5,7 @@ import { useIntegration } from '@/hooks/useIntegration';
 import { motion } from 'framer-motion';
 import { PulseLoader } from 'react-spinners';
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 
 const fadeIn = {
   hidden: { opacity: 0 },
@@ -162,22 +163,61 @@ export default function IntegrationPage() {
                 </button>
               </div>
 
-              {/* Newly generated key alert */}
-              {newlyCreatedApiKey?.api_key && (
-                <div className="bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-                  <p className="text-green-800 dark:text-green-300 font-medium mb-2">New API key generated!</p>
-                  <p className="font-mono break-all text-dark-800 dark:text-light-50">
-                    {newlyCreatedApiKey.api_key}
-                  </p>
-                  <p className="text-sm text-dark-600 dark:text-light-400 mt-2">
-                    Make sure to copy this key now. You won't be able to see it again.
-                  </p>
-                  <button
-                    onClick={clearNewApiKey}
-                    className="mt-3 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md text-sm"
-                  >
-                    Got it
-                  </button>
+              {/* Newly generated key modal */}
+              {(newlyCreatedApiKey?.api_key || newlyCreatedApiKey?.key) && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                  <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg p-8">
+                    {/* Close button */}
+                    <button
+                      onClick={clearNewApiKey}
+                      className="absolute top-4 right-4 text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white"
+                      aria-label="Close"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-600/20 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c1.306 0 2.417-.835 2.83-2H17a1 1 0 100-2h-2.17A3.001 3.001 0 0012 5a3 3 0 00-2.83 2H7a1 1 0 100 2h2.17A3.001 3.001 0 0012 11z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13a7 7 0 0114 0v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl font-semibold text-dark-900 dark:text-white text-center mb-4">New API Key</h3>
+                    <p className="text-dark-600 dark:text-light-400 text-center mb-6">Copy and store this key securely. <br className="hidden sm:block"/>You won't be able to view it again.</p>
+
+                    <div className="flex items-center gap-2 mb-8">
+                      <code className="flex-1 font-mono break-all bg-light-100 dark:bg-dark-700 px-4 py-3 rounded-md text-sm text-dark-900 dark:text-light-50 select-all">
+                        {newlyCreatedApiKey.api_key ?? newlyCreatedApiKey.key}
+                      </code>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText((newlyCreatedApiKey.api_key ?? newlyCreatedApiKey.key) ?? '');
+                            toast.success('Copied');
+                          } catch {
+                            toast.error('Failed');
+                          }
+                        }}
+                        className="shrink-0 px-4 py-3 rounded-md bg-primary-600 hover:bg-primary-700 text-white text-sm"
+                      >
+                        Copy
+                      </button>
+                    </div>
+
+                    <div className="text-center">
+                      <button
+                        onClick={clearNewApiKey}
+                        className="inline-flex items-center justify-center px-6 py-3 rounded-md bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium shadow-sm"
+                      >
+                        I have copied it
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
