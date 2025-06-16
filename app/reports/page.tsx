@@ -59,9 +59,42 @@ export default function ReportsPage() {
     return `${hours}h ${minutes}m`;
   };
 
+  // Format currency (Ethiopian Birr)
+  const formatCurrency = (amount: number | string): string => {
+    if (typeof amount === 'string') return amount;
+    try {
+      return new Intl.NumberFormat('en-ET', {
+        style: 'currency',
+        currency: 'ETB',
+        minimumFractionDigits: 2
+      }).format(amount);
+    } catch {
+      return `${amount} Br`;
+    }
+  };
+
   // Format date to a readable format
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return 'N/A';
+
+    // Some backend timestamps include more than 3 fractional second digits
+    // which the JS Date parser may consider invalid. Trim to 3 digits max.
+    const sanitized = dateString.replace(/\.(\d{3})\d*(Z?)$/, '.$1$2');
+
+    const date = new Date(sanitized);
+
+    if (isNaN(date.getTime())) {
+      // Fallback – try without fractional seconds completely
+      const fallback = dateString.split('.')[0] + 'Z';
+      const altDate = new Date(fallback);
+      return isNaN(altDate.getTime()) ? 'Invalid Date' : altDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -251,6 +284,74 @@ export default function ReportsPage() {
                 </div>
                 <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
               </motion.div>
+
+              {/* Total Revenue */}
+              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 shadow-md rounded-xl p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Total Revenue</h3>
+                  <div className="rounded-md bg-primary-100 dark:bg-primary-600/10 p-2">
+                    <svg className="h-5 w-5 text-primary-600 dark:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3h6c0-1.657-1.343-3-3-3zM9 11v2m6-2v2m-6 4h6"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-3xl font-bold text-dark-900 dark:text-white">
+                    {formatCurrency(report?.totalRevenue.value || 0)}
+                  </p>
+                </div>
+                <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
+              </motion.div>
+
+              {/* Delivery Success Rate */}
+              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 shadow-md rounded-xl p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Delivery Success Rate</h3>
+                  <div className="rounded-md bg-primary-100 dark:bg-primary-600/10 p-2">
+                    <svg className="h-5 w-5 text-primary-600 dark:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12l5 5L20 7"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-3xl font-bold text-dark-900 dark:text-white">
+                    {typeof report?.deliverySuccessRate.value === 'number' ? (report!.deliverySuccessRate.value as number).toFixed(1) : report?.deliverySuccessRate.value}%
+                  </p>
+                </div>
+                <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
+              </motion.div>
+
+              {/* Cancelled Deliveries */}
+              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 shadow-md rounded-xl p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Cancelled Deliveries</h3>
+                  <div className="rounded-md bg-primary-100 dark:bg-primary-600/10 p-2">
+                    <svg className="h-5 w-5 text-primary-600 dark:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-dark-900 dark:text-white">
+                  {report?.cancelledDeliveries.value || 0}
+                </p>
+                <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
+              </motion.div>
+
+              {/* Pending Deliveries */}
+              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 shadow-md rounded-xl p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Pending Deliveries</h3>
+                  <div className="rounded-md bg-primary-100 dark:bg-primary-600/10 p-2">
+                    <svg className="h-5 w-5 text-primary-600 dark:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3"></path>
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-dark-900 dark:text-white">
+                  {report?.pendingDeliveries.value || 0}
+                </p>
+                <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
+              </motion.div>
             </motion.div>
             
             <motion.div 
@@ -299,7 +400,7 @@ export default function ReportsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 py-1 text-xs rounded-full ${
-                                order.status === 'delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                                (order.status === 'delivered' || order.status === 'completed') ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
                                 order.status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
                                 order.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
                                 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
