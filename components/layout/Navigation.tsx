@@ -86,6 +86,16 @@ export const Navigation: React.FC = () => {
                   >
                     Reports
                   </Link>
+                  <Link
+                    href="/integration"
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                      isActive('/integration') 
+                        ? 'border-primary-500 text-dark-900 dark:text-white' 
+                        : 'border-transparent text-dark-500 dark:text-light-400 hover:text-dark-700 dark:hover:text-white'
+                    }`}
+                  >
+                    Integration
+                  </Link>
                 </>
               )}
             </div>
@@ -212,6 +222,17 @@ export const Navigation: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Reports
+                  </Link>
+                  <Link
+                    href="/integration"
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      isActive('/integration') 
+                        ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-primary-500 text-primary-600 dark:text-primary-400' 
+                        : 'text-dark-600 dark:text-light-300 hover:bg-light-200 dark:hover:bg-dark-700 hover:text-dark-900 dark:hover:text-white'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Integration
                   </Link>
                 </>
               )}

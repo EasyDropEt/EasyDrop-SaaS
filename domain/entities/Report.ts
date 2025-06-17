@@ -17,6 +17,7 @@ export interface BusinessReportApiResponse {
   report_start_date: string;
   report_end_date: string;
   average_delivery_time_minutes: number;
+  average_delivery_distance_km: number;
   on_time_delivery_rate: number;
   late_deliveries: number;
   customer_satisfaction_average_rating: number;
@@ -29,8 +30,14 @@ export interface BusinessReportApiResponse {
   delivery_performance_data: any[];
   orders: {
     id: string;
-    status: string;
-    created_at: string;
+    /**
+     * Some API responses use the key `order_status` instead of `status`. Keep both optional
+     * to ensure type-safety while maintaining backward compatibility.
+     */
+    status?: string;
+    order_status?: string;
+    created_at?: string;
+    latest_time_of_delivery?: string;
   }[];
 }
 
@@ -40,6 +47,19 @@ export interface BusinessReportDto {
   completedDeliveries: ReportMetric;
   avgDeliveryTime: ReportMetric;
   customerSatisfaction: ReportMetric;
+  cancelledDeliveries: ReportMetric;
+  pendingDeliveries: ReportMetric;
+  failedDeliveries: ReportMetric;
+  deliverySuccessRate: ReportMetric;
+  totalRevenue: ReportMetric;
+  averageOrderValue: ReportMetric;
+  onTimeDeliveryRate: ReportMetric;
+  lateDeliveries: ReportMetric;
+  customerRetentionRate: ReportMetric;
+  newCustomers: ReportMetric;
+  repeatCustomers: ReportMetric;
+  averageDeliveryDistance: ReportMetric;
+  averageDriverRating: ReportMetric;
   recentOrders: {
     id: string;
     status: string;

@@ -47,11 +47,28 @@ export class ReportRepository {
       completedDeliveries: this.createMetric(apiData.completed_deliveries),
       avgDeliveryTime: this.createMetric(apiData.average_delivery_time_minutes),
       customerSatisfaction: this.createMetric(apiData.customer_satisfaction_average_rating),
-      recentOrders: (apiData.orders || []).map(order => ({
-        id: order.id,
-        status: order.status,
-        createdAt: order.created_at
-      }))
+      cancelledDeliveries: this.createMetric(apiData.cancelled_deliveries),
+      pendingDeliveries: this.createMetric(apiData.pending_deliveries),
+      failedDeliveries: this.createMetric(apiData.failed_deliveries),
+      deliverySuccessRate: this.createMetric(apiData.delivery_success_rate),
+      totalRevenue: this.createMetric(apiData.total_revenue_birr),
+      averageOrderValue: this.createMetric(apiData.average_order_value_birr),
+      onTimeDeliveryRate: this.createMetric(apiData.on_time_delivery_rate),
+      lateDeliveries: this.createMetric(apiData.late_deliveries),
+      customerRetentionRate: this.createMetric(apiData.customer_retention_rate),
+      newCustomers: this.createMetric(apiData.new_customers),
+      repeatCustomers: this.createMetric(apiData.repeat_customers),
+      averageDeliveryDistance: this.createMetric(apiData.average_delivery_distance_km),
+      averageDriverRating: this.createMetric(apiData.average_driver_rating),
+      recentOrders: (apiData.orders || []).map(order => {
+        // Some backend versions send `order_status` instead of `status`
+        const orderStatus: string | undefined = order.order_status ?? order.status;
+        return {
+          id: order.id,
+          status: orderStatus ?? 'unknown',
+          createdAt: order.created_at ?? (order as any).latest_time_of_delivery ?? (order as any).latest_time_of_arrival ?? ''
+        };
+      })
     };
     
     return report;

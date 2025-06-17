@@ -5,6 +5,7 @@ import { Navigation } from "@/components/layout/Navigation";
 import { BusinessProvider } from "@/context/BusinessContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MapProvider } from "@/providers/map-provider";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,8 @@ export default function RootLayout({
                     {children}
                   </main>
                 </MapProvider>
+              <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+
               <footer className="py-8 border-t border-light-300 dark:border-dark-700">
                 <div className="container mx-auto px-4 text-center text-dark-500 dark:text-light-500 text-sm">
                   &copy; {new Date().getFullYear()} EasyDrop. All rights reserved.
