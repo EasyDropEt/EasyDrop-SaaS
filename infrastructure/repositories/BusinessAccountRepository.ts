@@ -105,7 +105,7 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
       message: string;
       data: BusinessDto;
       errors: any[];
-    }>('/business/me');
+    }>('/business/me/profile');
     
     if (!response.is_success) {
       throw new ValidationError(response.message || 'Failed to get business data');
