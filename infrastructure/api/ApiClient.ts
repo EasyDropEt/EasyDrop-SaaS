@@ -66,7 +66,12 @@ export class ApiClient {
       const headers = this.getHeaders();
       console.log('Request headers:', headers);
       
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      // Determine if the provided endpoint is an absolute URL. If so, use it directly;
+      // otherwise, prefix it with the configured baseUrl.
+      const isAbsoluteUrl = /^https?:\/\//i.test(endpoint);
+      const finalUrl = isAbsoluteUrl ? endpoint : `${this.baseUrl}${endpoint}`;
+      
+      const response = await fetch(finalUrl, {
         ...options,
         headers: {
           ...headers,

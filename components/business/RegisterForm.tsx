@@ -3,15 +3,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BusinessRegistration } from '@/domain/entities/Business';
-import { Location } from '@/domain/entities/Location';
 import { CreateBusinessAccountUseCase } from '@/application/useCases/business/CreateBusinessAccountUseCase';
 import { BusinessAccountRepository } from '@/infrastructure/repositories/BusinessAccountRepository';
 import { ApiClient } from '@/infrastructure/api/ApiClient';
-import { useBusinessContext } from '@/context/BusinessContext';
 import { ValidationError } from '@/domain/errors/AppError';
 import { GetBusinessOtpUseCase } from '@/application/useCases/business/GetBusinessOtpUseCase';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { LocationPicker, SelectedLocation } from '@/components/common/LocationPicker';
 
 const initialFormState: Omit<BusinessRegistration, 'location'> & { 
   address: string;
@@ -20,6 +19,8 @@ const initialFormState: Omit<BusinessRegistration, 'location'> & {
   country: string;
   password: string;
   password_confirmation: string;
+  latitude: number;
+  longitude: number;
 } = {
   business_name: '',
   owner_first_name: '',
@@ -30,6 +31,8 @@ const initialFormState: Omit<BusinessRegistration, 'location'> & {
   city: '',
   postal_code: '',
   country: '',
+  latitude: 0,
+  longitude: 0,
   password: '',
   password_confirmation: '',
 };
@@ -97,6 +100,14 @@ export const RegisterForm: React.FC = () => {
       newErrors.password_confirmation = 'Passwords do not match';
     }
     
+    // Latitude & Longitude validation specific to Addis Ababa range
+    if (formData.latitude < 8.8 || formData.latitude > 9.1) {
+      newErrors.latitude = 'Latitude must be between 8.8 and 9.1 for Addis Ababa';
+    }
+    if (formData.longitude < 38.6 || formData.longitude > 39.0) {
+      newErrors.longitude = 'Longitude must be between 38.6 and 39.0 for Addis Ababa';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -138,8 +149,8 @@ export const RegisterForm: React.FC = () => {
           city: formData.city,
           postal_code: formData.postal_code,
           country: formData.country,
-          latitude: 0, // These would be populated by a geocoding service in a real implementation
-          longitude: 0
+          latitude: formData.latitude,
+          longitude: formData.longitude,
         },
         billing_details: [{}],
         password: formData.password
@@ -310,7 +321,39 @@ export const RegisterForm: React.FC = () => {
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone_number}</p>
           )}
         </div>
-        
+
+        {/* Location Picker */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">Select Your Business Location</h2>
+          <LocationPicker onSelect={(loc: SelectedLocation) => {
+            setFormData((prev) => ({
+              ...prev,
+              address: loc.address,
+              city: loc.city,
+              postal_code: loc.postal_code,
+              country: loc.country,
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+            }));
+
+            // Clear any existing validation errors related to location once a valid point is selected
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.address;
+              delete newErrors.city;
+              delete newErrors.postal_code;
+              delete newErrors.country;
+              return newErrors;
+            });
+          }} />
+          {errors.latitude && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.latitude}</p>
+          )}
+          {errors.longitude && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.longitude}</p>
+          )}
+        </div>
+
         <div>
           <label htmlFor="address" className="block text-sm font-medium text-dark-700 dark:text-light-300 mb-2">
             Address

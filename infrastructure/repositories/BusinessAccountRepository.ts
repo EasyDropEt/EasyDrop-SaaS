@@ -12,17 +12,69 @@ export class BusinessAccountRepository implements IBusinessAccountRepository {
       throw new ValidationError('Business name, phone number, and password are required');
     }
 
-    const response = await this.apiClient.post<{
+    let userId: string | undefined;
+
+    // 1) Create or get the underlying user account via the Auth service
+    try {
+      const authServiceUrl = 'https://auth.service.easydrop-et.space';
+      const authClient = new ApiClient();
+      authClient.setBaseUrl(authServiceUrl);
+
+      const authResponse = await authClient.post<{
+        is_success: boolean;
+        message: string;
+        data: Record<string, any> & { id?: string; user_id?: string };
+        errors: any[];
+      }>(
+        '/auth/create-or-get/consumer',
+        {
+          phone_number: businessData.phone_number,
+          password: businessData.password,
+          first_name: businessData.owner_first_name,
+          last_name: businessData.owner_last_name,
+          email: businessData.email,
+        }
+      );
+
+      userId = authResponse.data?.user_id || authResponse.data?.id;
+
+      if (!userId) {
+        throw new ValidationError('Auth service did not return a user_id');
+      }
+    } catch (error) {
+      // If user creation fails, surface the error to the caller
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+
+      throw new ValidationError('Failed to create underlying user account');
+    }
+
+    // 2) Create the business itself via the Core service
+    const coreServiceUrl = 'https://core.service.easydrop-et.space';
+    const coreClient = new ApiClient();
+    coreClient.setBaseUrl(coreServiceUrl);
+
+    const response = await coreClient.post<{
       is_success: boolean;
       message: string;
       data: BusinessDto;
       errors: any[];
-    }>('/business/register', businessData);
-    
+    }>('/businesses/v2/', {
+      business_name: businessData.business_name,
+      owner_first_name: businessData.owner_first_name,
+      owner_last_name: businessData.owner_last_name,
+      phone_number: businessData.phone_number,
+      email: businessData.email,
+      user_id: userId as string,
+      location: businessData.location,
+      // The new endpoint does not expect password/billing_details; omit them
+    });
+
     if (!response.is_success) {
       throw new ValidationError(response.message || 'Failed to create business account');
     }
-    
+
     return response.data;
   }
 

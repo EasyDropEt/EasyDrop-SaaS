@@ -6,6 +6,19 @@ import { useBusinessReport } from '@/hooks/useBusinessReport';
 import { motion } from 'framer-motion';
 import { PulseLoader } from 'react-spinners';
 import { useState } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title as ChartTitle,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ChartTitle, Tooltip, Legend);
 
 const fadeIn = {
   hidden: { opacity: 0 },
@@ -353,22 +366,68 @@ export default function ReportsPage() {
                 <p className="text-sm text-dark-500 dark:text-light-400 mt-1">Last 30 days</p>
               </motion.div>
             </motion.div>
-            
-            <motion.div 
-              variants={fadeInUp}
-              className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 rounded-xl shadow-md overflow-hidden p-6 mb-8"
-            >
-              <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Delivery Performance</h2>
-              <div className="h-64 bg-light-100 dark:bg-dark-700 rounded-lg flex items-center justify-center">
-                {loading ? (
-                  <PulseLoader color="#6366F1" size={10} />
-                ) : (
-                  <p className="text-dark-500 dark:text-light-400">
-                    {report ? 'Performance charts coming soon' : 'No delivery data available yet'}
-                  </p>
-                )}
-              </div>
-            </motion.div>
+
+
+            {/* Delivery Performance Chart */}
+            {report?.deliveryPerformanceData && report.deliveryPerformanceData.length > 0 && (
+              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 shadow-md rounded-xl p-6 mb-8">
+                <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">Delivery Performance</h3>
+                <Line
+                  data={{
+                    labels: report.deliveryPerformanceData.map((d) => new Date(d[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [
+                      {
+                        label: 'Planned (hrs)',
+                        data: report.deliveryPerformanceData.map((d) => d[1]),
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99,102,241,0.2)',
+                        tension: 0.3,
+                      },
+                      {
+                        label: 'Actual (hrs)',
+                        data: report.deliveryPerformanceData.map((d) => d[2]),
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16,185,129,0.2)',
+                        tension: 0.3,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'top' as const,
+                        labels: {
+                          color: '#6B7280',
+                        },
+                      },
+                      title: {
+                        display: false,
+                        text: 'Delivery Performance',
+                      },
+                    },
+                    scales: {
+                      x: {
+                        ticks: {
+                          color: '#6B7280',
+                        },
+                        grid: {
+                          color: 'rgba(107,114,128,0.1)',
+                        },
+                      },
+                      y: {
+                        ticks: {
+                          color: '#6B7280',
+                        },
+                        grid: {
+                          color: 'rgba(107,114,128,0.1)',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </motion.div>
+            )}
             
             <motion.div 
               variants={staggerContainer} 
