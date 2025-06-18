@@ -233,7 +233,7 @@ export default function IntegrationPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-light-300 dark:divide-dark-600">
-                    {apiKeys.map((key) => (
+                    {apiKeys.filter((key) => !key.name?.includes('Temporary API key created by system')).map((key) => (
                       <tr key={key.api_key_prefix}>
                         <td className="px-4 py-2 text-dark-900 dark:text-white">
                           {key.name ?? '—'}

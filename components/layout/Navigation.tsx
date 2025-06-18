@@ -136,7 +136,7 @@ export const Navigation: React.FC = () => {
                         className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-dark-700 ring-1 ring-light-300 dark:ring-dark-600 z-50"
                       >
                         <Link 
-                          href="/business/profile"
+                          href="/business/me/profile"
                           className="block px-4 py-2 text-sm text-dark-700 dark:text-light-200 hover:bg-light-200 dark:hover:bg-dark-600"
                           onClick={() => setIsMenuOpen(false)}
                         >
