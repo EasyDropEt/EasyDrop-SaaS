@@ -13,7 +13,7 @@ export class ReportRepository {
   constructor(apiClient: ApiClient) {
     this.apiClient = apiClient;
     // Override the base URL to use NEXT_PUBLIC_API_URL_CORE for reports
-    const coreApiUrl = process.env.NEXT_PUBLIC_API_URL_CORE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const coreApiUrl = process.env.NEXT_PUBLIC_API_URL_CORE || process.env.NEXT_PUBLIC_API_URL || 'https://gateway.service.easydrop-et.space';
     this.apiClient.setBaseUrl(coreApiUrl);
     console.log('Report API URL:', coreApiUrl);
   }

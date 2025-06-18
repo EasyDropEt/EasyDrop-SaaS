@@ -6,7 +6,7 @@ export class ApiClient {
 
   constructor() {
     // Use mock server by default, allow override with environment variable
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gateway.service.easydrop-et.space';
   }
 
   setAuthToken(token: string) {
