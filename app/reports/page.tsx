@@ -372,7 +372,7 @@ export default function ReportsPage() {
             
             <motion.div 
               variants={staggerContainer} 
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="grid grid-cols-1 gap-6"
             >
               <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 rounded-xl shadow-md overflow-hidden p-6">
                 <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Recent Orders</h2>
@@ -422,19 +422,6 @@ export default function ReportsPage() {
                       )}
                     </tbody>
                   </table>
-                </div>
-              </motion.div>
-              
-              <motion.div variants={fadeInUp} className="bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 rounded-xl shadow-md overflow-hidden p-6">
-                <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Delivery Areas</h2>
-                <div className="h-64 bg-light-100 dark:bg-dark-700 rounded-lg flex items-center justify-center">
-                  {loading ? (
-                    <PulseLoader color="#6366F1" size={10} />
-                  ) : (
-                    <p className="text-dark-500 dark:text-light-400">
-                      {report ? 'Area visualization coming soon' : 'No delivery data available yet'}
-                    </p>
-                  )}
                 </div>
               </motion.div>
             </motion.div>
