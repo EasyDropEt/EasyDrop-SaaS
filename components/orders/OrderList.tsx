@@ -3,9 +3,7 @@ import { useOrderContext } from '@/context/OrderContext';
 import { Order } from '@/domain/entities/Order';
 import Link from 'next/link';
 
-interface OrderListProps {
-  // Remove businessId as it's no longer needed
-}
+interface OrderListProps {}
 
 export const OrderList: React.FC<OrderListProps> = () => {
   const { orders, loading, error, fetchOrders } = useOrderContext();

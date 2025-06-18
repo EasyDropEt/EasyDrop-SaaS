@@ -2,7 +2,7 @@
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useBusinessContext } from '@/context/BusinessContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useOrders } from '@/hooks/useOrders';
 import { Order } from '@/domain/entities/Order';
@@ -43,8 +43,34 @@ const fadeInUp = {
 export default function OrdersPage() {
   const { business } = useBusinessContext();
   const { orders, loading, error, fetchOrders } = useOrders();
-  const [selectedTab, setSelectedTab] = useState('all');
+
+  /*
+   * Status definitions used for building the UI tabs and filtering logic.
+   *  - key       : string value kept in local component state
+   *  - label     : user-facing text shown on the button
+   *  - backend   : the status string returned by the API
+   */
+  const STATUS_TABS = [
+    { key: 'pending', label: 'Pending', backend: 'PENDING' },
+    { key: 'in_progress', label: 'In Progress', backend: 'IN_PROGRESS' },
+    { key: 'picked_up', label: 'Picked Up', backend: 'PICKED_UP' },
+    { key: 'completed', label: 'Completed', backend: 'DELIVERED' },
+    { key: 'cancelled', label: 'Cancelled', backend: 'CANCELLED' },
+    { key: 'failed', label: 'Failed', backend: 'FAILED' }
+  ] as const;
+
+  const [selectedTab, setSelectedTab] = useState<string>('all');
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+
+  /*
+   * Compute which tabs should be displayed based on the statuses that
+   * actually exist in the list of orders returned by the backend.
+   */
+  const availableStatusTabs = useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    const present = new Set(orders.map((o) => (o.status ?? '').toUpperCase()));
+    return STATUS_TABS.filter((tab) => present.has(tab.backend));
+  }, [orders]);
 
   useEffect(() => {
     if (business?.id) {
@@ -53,24 +79,17 @@ export default function OrdersPage() {
   }, [business?.id, fetchOrders]);
 
   useEffect(() => {
-    // Filter orders based on selected tab
+    // Filter orders whenever list of orders or selected tab changes
     if (selectedTab === 'all') {
       setFilteredOrders(orders);
+      return;
+    }
+
+    const match = STATUS_TABS.find((t) => t.key === selectedTab);
+    if (match) {
+      setFilteredOrders(orders.filter((o) => (o.status ?? '').toUpperCase() === match.backend));
     } else {
-      const statusMap: Record<string, string> = {
-        'pending': 'PENDING',
-        'in_progress': 'PICKED_UP', 
-        'completed': 'DELIVERED',
-        'cancelled': 'CANCELLED'
-      };
-      
-      const targetStatus = statusMap[selectedTab];
-      if (targetStatus) {
-        const filtered = orders.filter(order => order.status === targetStatus);
-        setFilteredOrders(filtered);
-      } else {
-        setFilteredOrders(orders);
-      }
+      setFilteredOrders(orders);
     }
   }, [orders, selectedTab]);
 
@@ -89,6 +108,7 @@ export default function OrdersPage() {
       case 'pending':
         return 'bg-yellow-500 text-black';
       case 'cancelled':
+      case 'failed':
         return 'bg-red-600 text-white';
       default:
         return 'bg-gray-600 text-white';
@@ -141,6 +161,7 @@ export default function OrdersPage() {
         >
           <div className="border-b border-light-300 dark:border-dark-700">
             <nav className="flex overflow-x-auto">
+              {/* Always show "All" tab */}
               <button
                 onClick={() => setSelectedTab('all')}
                 className={`px-6 py-4 text-sm font-medium transition-colors ${
@@ -151,46 +172,20 @@ export default function OrdersPage() {
               >
                 All Orders
               </button>
-              <button
-                onClick={() => setSelectedTab('pending')}
-                className={`px-6 py-4 text-sm font-medium transition-colors ${
-                  selectedTab === 'pending'
-                    ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white'
-                }`}
-              >
-                Pending
-              </button>
-              <button
-                onClick={() => setSelectedTab('in_progress')}
-                className={`px-6 py-4 text-sm font-medium transition-colors ${
-                  selectedTab === 'in_progress'
-                    ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white'
-                }`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setSelectedTab('completed')}
-                className={`px-6 py-4 text-sm font-medium transition-colors ${
-                  selectedTab === 'completed'
-                    ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white'
-                }`}
-              >
-                Completed
-              </button>
-              <button
-                onClick={() => setSelectedTab('cancelled')}
-                className={`px-6 py-4 text-sm font-medium transition-colors ${
-                  selectedTab === 'cancelled'
-                    ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white'
-                }`}
-              >
-                Cancelled
-              </button>
+
+              {availableStatusTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setSelectedTab(tab.key as any)}
+                  className={`px-6 py-4 text-sm font-medium transition-colors ${
+                    selectedTab === tab.key
+                      ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
+                      : 'text-dark-500 hover:text-dark-700 dark:text-light-400 dark:hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </nav>
           </div>
           

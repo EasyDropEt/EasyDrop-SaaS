@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
-import { Business } from '@/domain/entities/Business';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { Metadata } from 'next';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { PulseLoader, ClipLoader } from 'react-spinners';
@@ -187,31 +185,7 @@ export default function BusinessProfilePage() {
                         <label className="block text-sm font-medium text-dark-600 dark:text-light-400 mb-1">Postal Code</label>
                         <div className="text-dark-900 dark:text-white">{business?.location?.postal_code}</div>
                       </div>
-                      
-                      {/* <div>
-                        <label className="block text-sm font-medium text-dark-600 dark:text-light-400 mb-1">Country</label>
-                        <div className="text-dark-900 dark:text-white">{business?.location?.country}</div>
-                      </div> */}
                     </div>
-                  </motion.div>
-                  
-                  <motion.div variants={fadeInUp} className="mt-6 pt-6 border-t border-light-300 dark:border-dark-700 flex justify-end space-x-4">
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => router.push('/business/edit')}
-                      className="btn-outline"
-                    >
-                      Edit Profile
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => router.push('/business/settings')}
-                      className="btn-primary"
-                    >
-                      Account Settings
-                    </motion.button>
                   </motion.div>
                 </div>
               </div>

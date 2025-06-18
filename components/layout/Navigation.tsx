@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { ThemeToggle } from './ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 export const Navigation: React.FC = () => {
   const pathname = usePathname();
@@ -36,12 +37,8 @@ export const Navigation: React.FC = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <motion.div 
-                  initial={{ scale: 0.8 }} 
-                  animate={{ scale: 1 }} 
-                  className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center"
-                >
-                  <span className="text-white font-bold">E</span>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-8 h-8 relative">
+                  <Image src="/easy%20drop.png" alt="EasyDrop logo" fill className="object-contain" sizes="32px" />
                 </motion.div>
                 <motion.span 
                   initial={{ opacity: 0, x: -5 }}
