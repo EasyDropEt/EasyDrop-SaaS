@@ -65,6 +65,7 @@ export interface BusinessReportDto {
     status: string;
     createdAt: string;
   }[];
+  deliveryPerformanceData?: [string, number, number][];
   // Could add more metrics as needed
 }
 

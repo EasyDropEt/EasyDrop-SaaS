@@ -56,35 +56,95 @@ export class OrderRepository implements IOrderRepository {
 
   async create(order: Omit<Order, 'id'>): Promise<Order> {
     // For single order creation, we'll use the batch endpoint with a single order
-    const response = await this.createBatch([order]);
-    return response[0]; // Return the first (and only) order
+    const response = await this.createOne(order);
+    return response; // Return the first (and only) order
   }
 
-  async createBatch(orders: Omit<Order, 'id'>[]): Promise<Order[]> {
-    // Transform internal Order entities to API CreateOrdersDto format
-    const orderRequests = orders.map(order => ({
-      recipient: {
-        name: order.consumer.name,
-        email: order.consumer.email,
-        phone: order.consumer.phone_number
-      },
-      delivery_location: (order as any).delivery_location || {
-        address: "Default Address",
-        postal_code: "00000", 
-        city: "Default City",
-        country: "Default Country"
-      },
+  async createOne(order: Omit<Order, 'id'>): Promise<Order> {
+    // Map to new single-order DTO expected by backend
+    const firstName = order.consumer.first_name || order.consumer.name?.split(' ')[0] || 'First';
+    const lastName = order.consumer.last_name || order.consumer.name?.split(' ').slice(1).join(' ') || 'Last';
+
+    const location = order.consumer.location || (order as any).delivery_location || {
+      address: 'Default Address',
+      postal_code: '00000',
+      city: 'Default City',
+      country: 'Default Country',
+      latitude: 0,
+      longitude: 0,
+    };
+
+    const requestBody = {
+      first_name: firstName,
+      last_name: lastName,
+      phone_number: order.consumer.phone_number,
+      email: order.consumer.email,
+      location,
+      latest_time_of_delivery:
+        order.latest_time_of_arrival instanceof Date
+          ? order.latest_time_of_arrival.toISOString()
+          : new Date(order.latest_time_of_arrival).toISOString(),
       parcel: {
         size: order.parcel.size,
         weight: order.parcel.weight,
         fragile: order.parcel.fragile,
-        dimensions: order.parcel.dimensions
+        length: (order.parcel.dimensions as any)?.length ?? 0,
+        width: (order.parcel.dimensions as any)?.width ?? 0,
+        height: (order.parcel.dimensions as any)?.height ?? 0,
       },
-      notes: (order as any).notes || "Order created via business portal",
-      latest_time_of_delivery: order.latest_time_of_arrival instanceof Date 
-        ? order.latest_time_of_arrival.toISOString()
-        : new Date(order.latest_time_of_arrival).toISOString()
-    }));
+      notes: (order as any).notes || undefined,
+    };
+
+    const response = await this.apiClient.post<{
+      is_success: boolean;
+      message: string;
+      data: any;
+      errors: any[];
+    }>('/business/me/orders', requestBody);
+
+    if (!response.is_success) {
+      throw new Error(response.message || 'Failed to create order');
+    }
+
+    return this.transformApiOrderToEntity(response.data);
+  }
+
+  async createBatch(orders: Omit<Order, 'id'>[]): Promise<Order[]> {
+    // Transform internal Order entities to API CreateOrdersDto format
+    const orderRequests = orders.map(order => {
+      // Extract consumer name parts if first/last not provided
+      const firstName = order.consumer.first_name || order.consumer.name?.split(' ')[0] || 'First';
+      const lastName = order.consumer.last_name || order.consumer.name?.split(' ').slice(1).join(' ') || 'Last';
+
+      const location = order.consumer.location || (order as any).delivery_location || {
+        address: "Default Address",
+        postal_code: "00000",
+        city: "Default City",
+        country: "Default Country",
+        latitude: 0,
+        longitude: 0,
+      };
+
+      return {
+        consumer: {
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: order.consumer.phone_number,
+          email: order.consumer.email,
+          location,
+        },
+        latest_time_of_delivery:
+          order.latest_time_of_arrival instanceof Date
+            ? order.latest_time_of_arrival.toISOString()
+            : new Date(order.latest_time_of_arrival).toISOString(),
+        parcel: {
+          size: order.parcel.size,
+          weight: order.parcel.weight,
+          fragile: order.parcel.fragile,
+          dimensions: order.parcel.dimensions,
+        },
+      };
+    });
 
     const response = await this.apiClient.post<{
       is_success: boolean;

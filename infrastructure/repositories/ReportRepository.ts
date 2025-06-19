@@ -68,7 +68,8 @@ export class ReportRepository {
           status: orderStatus ?? 'unknown',
           createdAt: order.created_at ?? (order as any).latest_time_of_delivery ?? (order as any).latest_time_of_arrival ?? ''
         };
-      })
+      }),
+      deliveryPerformanceData: apiData.delivery_performance_data || []
     };
     
     return report;
